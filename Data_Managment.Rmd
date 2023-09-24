@@ -41,5 +41,9 @@ quality_index[, Localisation := ifelse(Localisation == "Rennes MÃ©tropole", "R
 merged_data <- merge(quality_index, meteostat_data, by = c("time", "Localisation"))
 head(merged_data)
 ```
+Exportation du jeu de données
+```{r}
+fwrite(merged_data, file ="quality_index_rennes.csv", sep = ",")
+```
 
 
