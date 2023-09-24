@@ -5,11 +5,41 @@ date: "21/09/2023"
 output: html_document
 ---
 
-Allo la france ici Mathis 
-Allo la france ici Lou
-
-# Ajout des données 
+Installation des packages necessaires
 ```{r}
+install.packages("data.table")
+library(data.table)
+```
+
+# Importation du jeu de données ind_bretagne et du jeu de données meteostat 
+```{r}
+meteostat_data <- fread("meteostat_data.csv", header=TRUE)
+quality_index <- fread("ind_bretagne_csv.csv",sep = ";", header=TRUE )
+```
+
+On va mettre les colonnes représentant le jour au même format
+```{r}
+meteostat_data[, time := substr(time, 1, 10)]
+quality_index[, date_ech := substr(date_ech, 1, 10)]
+```
+
+On va utiliser les mêmes noms pour Localisation et time pour pouvoir merge les deux tableaux
+```{r}
+setnames(quality_index, old = "lib_zone", new = "Localisation")
+setnames(quality_index, old = "date_ech", new = "time")
 
 ```
+
+Pareil pour les modalités 
+```{r}
+quality_index[, Localisation := ifelse(Localisation == "Rennes MÃ©tropole", "Rennes", Localisation)]
+```
+
+# Création du jeu de données pour l'analyse stat
+
+```{r}
+merged_data <- merge(quality_index, meteostat_data, by = c("time", "Localisation"))
+head(merged_data)
+```
+
 
