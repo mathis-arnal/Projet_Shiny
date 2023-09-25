@@ -11,7 +11,9 @@ ind_bretagne_test <- read.csv("C:/Users/renax/Desktop/ACO/S9/Programmation_R/ind
 head(ind_bretagne_test$date_ech)
 class(ind_bretagne_test$date_ech)
 Date=as.POSIXct(strptime(ind_bretagne_test$date_ech, "%d/%m/%Y %H:%M"))
-
+ind_bretagne_test$Date <- Date
+dygraph(ind_bretagne_test$code_no2)
+x<-ind_bretagne_test$code_no2
 
 #####
 library(fontawesome)
