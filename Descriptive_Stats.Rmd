@@ -1,0 +1,44 @@
+---
+title: "Descriptive_Stat"
+author: "Mathis ARNAL"
+date: "2023-09-25"
+output: html_document
+---
+
+On va essayer de refaire les graphes de Meteostat à partir des données récoltées par l'API
+
+```{r}
+library(dygraphs)
+library(xts)
+```
+
+
+```{r}
+meteostat_data <- fread("meteostat_data.csv", header=TRUE)
+meteostat_data$time <- as.Date(meteostat_data$time, format="YYYY-MM-DD")
+```
+
+On fait des graphes dynamiques à l'aide de dygraphs, ici la temperature moyenne
+```{r}
+series <- xts(x = meteostat_data$tavg, order.by = meteostat_data$time)
+p <- dygraph(series)
+p
+```
+
+On essaye d'afficher la temperature moyenne, mininum et maximum ! 
+```{r}
+Temp<-cbind(meteostat_data$tavg,meteostat_data$tmax,meteostat_data$tmin)
+Temp_series <- xts(x = Temp, order.by = meteostat_data$time)
+colnames(Temp_series) <- c("tavg", "tmax", "tmin")
+dygraph(Temp_series, main = "Température")
+```
+
+
+On affiche la précipitation comme dans Meteostat !
+```{r}
+precipitation<-xts(x=meteostat_data$prcp,order.by = meteostat_data$time)
+colnames(precipitation)<-"precipitation(mm)"
+dygraph(precipitation, main = "precipitation(mm)")%>%
+  dySeries("precipitation(mm)",stepPlot = TRUE, fillGraph = TRUE, color = "blue")
+```
+
