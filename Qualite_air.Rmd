@@ -1,0 +1,178 @@
+---
+title: "Qualite de l'air"
+author: "Renée Le Clech"
+date: '2023-09-27'
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+# Analyse de la qualité de l'air à rennes.
+
+```{r}
+# Chargement des packages utilisé dans la suite du script
+library("data.table")
+library("dplyr")
+library("car")
+```
+
+## a) Présentation des données
+
+Les donnée météorologiques issues de Meteostat que nous avons présenté
+dans les onglets *'Presentation'* et illustré dans les onglets *'Carte
+intéractive'* et *'Données meteo'* représente un ensemble de 10
+variables de type Float64:
+
+| Variables |             Description              | Unité |
+|:---------:|:------------------------------------:|:-----:|
+|   tavg    |         Température moyenne          |  °C   |
+|   tmin    |      Températrure minimum en °C      |  °C   |
+|   tmax    |      Températrure maximum en °C      |  °C   |
+|   prcp    |      Précipitation quotidienne       |  mm   |
+|   snow    |        Profondeur de la neige        |  mm   |
+|   wdir    |     la direction moyenne du vent     |   °   |
+|   wspd    |     La vitesse moyenne du vente      | km/h  |
+|   wpgt    |       Rafale de vent maximale        | km/h  |
+|   pres    | Pression moyenne au niveau de la mer |  hPa  |
+|   tsun    | Le total d'ensoleillement quotidien  |  min  |
+
+Nous avons parallèlement récupéré des données de qualité de l'air issues
+de Atmo France (Fédération des Associations agréées de surveillance de
+la qualité de l'air).
+
+Nous nous sommes particulièrement interessés à l'indice ATMO, qui est un
+facteur à 6 modalités catégorielles : "Bon" , "Moyen", "Degradé",
+"Mauvais", "Très mauvais" et "Extrèmement mauvais"
+
+*" L'indice ATMO est calculé quotidiennement à l'échelle de chaque
+commune ou au maximum à l'échelle intercommunale.\
+Il est déterminé, à partir des concentrations de 5 [polluants
+réglementés](https://www.atmo-france.org/article/air-exterieur "Air extérieur")
+:*
+
+-   *Les particules fines inférieures à 10 micromètres : les PM~10~ ;*
+
+-   *Les particules fines inférieures à 2,5 micromètres : PM~2.5~ ;*
+
+-   *Le dioxyde d'azote (NO~2~)*
+
+-   *L'ozone (O~3~) ;*
+
+-   *Le dioxyde de soufre (SO~2~)."* - Site Atmo-france.org
+
+![](images/tableau.JPG){width="539"}
+
+[Table 1:]{.underline} tableau des seuil de calcul des indices ATMO pour
+les 5 polluants indicateurs de la pollution - source: Site
+Atmo-france.org
+
+Nos but est de mettre en relation les données météorologiques avec
+l'indice de la qualité de l'air; de voir si certaines variables
+météorologiques permettent d'expliquer l'indice ATMO.
+
+## b) Importation des données
+
+```{r}
+
+df <- read.csv("C:/Users/renax/Desktop/ACO/S9/Programmation_R/Projet_meteo/Projet_Shiny/quality_index_rennes.csv", header=TRUE)
+
+set.seed(45L)
+dt_qualite_air <- data.table(df) # transformation en datatable
+
+#summary(dt_qualite_air[,23:31]) # résumé pour les données meteo, pour verifier les classes des colonnes
+```
+
+Variable à expliquer est la colonne *code_qual*. Il s'agit une variable
+catégorielle 4 modalites : "1", "2", "3", "4", correspondant
+respectivement aux catégories d'air "Bon", "Moyen", "Dégradé" et
+"Mauvais".
+
+En effet on notera que dans notre jeu de données, l'indice ATMO va "que"
+de Bon à Mauvais, les modalités "Très mauvais" et "Extrèmement mauvais"
+ne sont ainsi pas présentes pour la ville de Rennes entre Septembre 2021
+et Septembre 2022.
+
+## c) Preparation des données
+
+En vue de la création d'un modèle logistique, il nous faut traiter au
+préalable nos données.
+
+### i. Variable réponse
+
+Les recommandations comportementales établies par le ministère en charge
+de la Santé sont associées aux différents qualificatifs de l'indice
+ATMO. Les recommandations distingue deux situations: les indices "Bon
+(1)" ou "Mauvais (2)" et les indices "Degradé (3)" à "Extrèmement
+Mauvais (6)". Dans le premier cas, il existe des recommandations
+d'avantage préventive, et dans le deuxième cas il y a des
+recommandations plus rudes pour reduire l'impact de la pollution sur la
+santé et sur l'environnement.
+
+A des fins de traitement statistique, nous décidons alors de regrouper
+les catégories 1 et 2 entre elles et les catégories 3 et 4 entre elles
+dans la nouvelle colonne *qualite_air_groupe:*
+
+```{r}
+# creation de la colonnes qualite_air_groupe
+dt_qualite_air[, qualite_air_groupe := ifelse(code_qual %in% c(1, 2), "Groupe 1-2",
+                                   ifelse(code_qual %in% c(3, 4), "Groupe 3-4", "Other"))]
+
+dt_qualite_air$qualite_air_groupe<- as.factor(dt_qualite_air$qualite_air_groupe)
+```
+
+Notre variable à expliquer est désormais la colonne *qualite_air_groupe
+l'air* qui a 2 modalités: "Groupe 1-2" et "Groupe 3-4".
+
+### ii. Variables explicatives
+
+La variable de direction du vent *wdir* ( ° ) nous interpelle car son
+unité étant des degrés, nous avons une situation dans laquelle notre
+modèle va éloigner les valeur 0° et 360° alors que ce sont les meme.
+Idem pour les valeurs 5° et 355°, le modèle va les considérer comme très
+éloignées alors qu'en réalité la direction du vent n'est différente que
+de 10° .
+
+Pour palier à cas, nous convertissons les degrés en une représentation
+plus adaptée pour notre modèle logistique. Nous récuperons les
+composantes x et y de la direction du vent par quelques traitement de
+trigonométrie:
+
+```{r}
+# Convertir les degrés en radians
+dt_qualite_air <- dt_qualite_air %>%
+  mutate(Angle_radians = wdir * pi / 180)
+
+# Calculer les composantes x et y de la direction du vent
+dt_qualite_air <- dt_qualite_air %>%
+  mutate(Vent_x = cos(Angle_radians),
+         Vent_y = sin(Angle_radians))
+```
+
+Avant de creer notre premier modèle nous remarquons que parmis nos
+données explicatives potentielles, certains sont liées. La température
+moyenne est instrinsèquement liée à la température minimale et la
+température maximale. Ainsi, par principe de parcimonie nous ne gardons
+que la température moyenne sur les 3 variables de température.
+
+## d) Création des modèles
+
+Nous faisons dans un premier temps un modèle logistique complet avec
+l'ensemble des variables explicatives, et nous cherchons un modèle final
+par le biais d'une selection de modèle par élimination descendante:
+
+```{r}
+# 1. Ajustez le modèle complet
+mod_complet <- glm(qualite_air_groupe ~ tavg + prcp + wspd + wpgt + pres + Vent_x + Vent_y, data = dt_qualite_air, family = "binomial")
+
+# 2. Ajustez le modèle 2 (sans la variable 'wpgt')
+mod_2 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + pres + Vent_x + Vent_y, data = dt_qualite_air, family = "binomial")
+
+# 3. Comparez les deux modèles en utilisant la fonction anova()
+resultat_anova <- anova(mod_complet, mod_2, test = "Chisq")
+
+# Affichez les résultats de l'ANOVA
+print(resultat_anova)
+
+
+```
