@@ -15,6 +15,7 @@ editor_options:
 library("data.table")
 library("dplyr")
 library("car")
+library("FactoMineR")
 ```
 
 ## a) Présentation des données
@@ -155,7 +156,37 @@ moyenne est instrinsèquement liée à la température minimale et la
 température maximale. Ainsi, par principe de parcimonie nous ne gardons
 que la température moyenne sur les 3 variables de température.
 
-## d) Création des modèles
+## d) Visualisation des données en anayse factorielle
+
+Afin d'avoir une vue d'esmble des variables explicatives et de la
+Variable réponse, nous faisons une ACP sur variables explicatives. Nous
+rajoutons en supplémentaire la variables *qualite_air_groupe* afin de
+determiner si elle se positioner de manière particulière face aux
+varibles et aux individus.
+
+```{r}
+# Selection des colonnes qui nous interesse i.e les variables explicatives et la variable réponse
+res<- PCA(dt_qualite_air[, c(22,23,25,27,28,29,30,32,34,35)],scale.unit = TRUE, quali.sup = 8)
+
+# Afficher le graphique PCA
+plot(res, habillage = 8, label = "none")
+
+```
+
+On vois sur le graph des individus colorés par groupe de qualité de
+l'air que le groupe 1-2 se réparti le long des deux première dimension
+de manière assez homogène. Les individus des groupes 3-4 sont legèrement
+plus vers la gauche du graphique, et se répartisse de manière homogène
+le long de la deuxième dimension. On retouve cela avec le barycentre des
+groupes 1-2 et 3-4 qui sont environ aux meme coordonées sur la deuxième
+dimension mais qui sont un peu différents sur la première
+
+On peut donc supposer que les variables contribuant le plus à la
+première dimension pourraient nous donner des informations sur la
+qualité de l'air. Il est cependant difficile de séparer complètement les
+deux groupes d'individus.
+
+## e) Création des modèles
 
 Nous faisons dans un premier temps un modèle logistique complet avec
 l'ensemble des variables explicatives, et nous cherchons un modèle final
