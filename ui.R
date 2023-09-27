@@ -3,6 +3,8 @@ library(colourpicker)
 library(shinydashboard)
 library(knitr)
 library(fresh)
+library(shinyWidgets)
+
 
 # rmdfiles <- c("RMarkdownFile.rmd")
 # sapply(rmdfiles, knit, quiet = T)
@@ -14,8 +16,8 @@ mytheme <- create_theme(
   ),
   adminlte_sidebar(
     width = "250px",
-    dark_bg = "#404040",
-    dark_hover_bg = "#81A1C1",
+    dark_bg = "#FFD700",
+    dark_hover_bg = "#D8DEE9",
     dark_color = "#2E3440"
   ),
   adminlte_global(
@@ -27,10 +29,17 @@ mytheme <- create_theme(
 
 # Define UI 
 shinyUI(
-  dashboardPage(skin="green",
+  dashboardPage(skin="blue",
     dashboardHeader(title = "Météo Bretagne", titleWidth = 250
                     ),
     dashboardSidebar(width = 250,
+                     sidebarMenu(id  = "menu",
+                     menuItem("Notre projet", tabName = "Projet"),
+                     menuItem("Carte interactive", tabName = "Carte"), 
+                     menuItem("Données météo", tabName = "Météo"),
+                     menuItem("Qualité de l'air", tabName = "Rapport"),
+                     
+                     conditionalPanel('input.menu == "Météo"',
                      tags$style("p {font-size: 18px;font-weight: bold}"),
                      div(style = "position:relative; left:calc(25%);", br(), p("Fonctionnalités")),
                        sidebarSearchForm(textId = "searchTown", buttonId = "searchButton",
@@ -42,9 +51,13 @@ shinyUI(
                        selectInput("dataset", "Choisissez le jeu de données que vous souhaitez télécharger :",
                                  choices = c("Données météo", "Données indice qualité de l'air")),
                         # Bouton
-                       div(style = "position:relative; left:calc(25%);",downloadButton("downloadData","Télécharger"))
+                       div(style = "position:relative; left:calc(25%);",downloadButton("downloadData","Télécharger"))))
+                     
                      ),
     dashboardBody(
+      
+      chooseSliderSkin("Flat"),
+      
       use_theme(mytheme),
       
       tags$head(tags$style(HTML('
@@ -56,10 +69,12 @@ shinyUI(
     '))),
       
       # navbarPage
-      navbarPage("Notre projet", 
+      navbarPage("Des bottes et un ciré ?", 
                  
                  # premier onglet présentation
-                 tabPanel("Présentation", 
+                 tabItems(
+                   # First tab content
+                   tabItem("Projet", 
                           "Ici nous allons présenter notre projet.",
                           fluidRow(
                             box(
@@ -69,15 +84,24 @@ shinyUI(
                           )
                  ),
                  # deuxième onglet carte
-                 tabPanel("Carte interactive", 
+                  tabItem("Carte", 
                           "Ici nous allons afficher la carte interactive de la Bretagne.",
                           fluidRow(
-                            box(title = "Titre carte interactive", "Box content", plotOutput("map"))
+                            box(title = "Titre carte interactive", "Box content", plotOutput("map")), 
+                            div(style = "position:relative; left:calc(25%);", sliderInput("Dates",
+                                        "Date sélectionnée:", 
+                                        min = as.Date("2021-09-22","%Y-%m-%d"),
+                                        max = as.Date("2023-09-22","%Y-%m-%d"),
+                                        value=as.Date("2021-09-22"),
+                                        timeFormat="%Y-%m-%d", 
+                                        width = "50%") 
+                                        )
+                          
                           )
                  ),
                  
                  # troisième onglet "Données météo"
-                 tabPanel("Données météo", 
+                  tabItem("Météo", 
                           "Ici nous allons afficher les données météo.",
                           fluidRow(
                             box(title = "Titre graph évolution pluie et température", "Box content", plotOutput("plotRainTemp")
@@ -89,10 +113,10 @@ shinyUI(
                           )),
                  
                  # troisème onglet "Qualité de l'air"
-                 tabPanel("Qualité de l'air", 
+                 tabItem("Rapport", 
                           "Ici nous allons afficher une analyse statistique des données permettant d'expliquer la varible qualité de l'air."
                           # withMathJax(includeMarkdown("RMarkdownFile.md")
-                 )
+                 ))
       )
     )
     )
