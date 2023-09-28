@@ -114,7 +114,8 @@ shinyUI(
                  
                  # troisème onglet "Qualité de l'air"
                  tabItem("Rapport", 
-                          "Ici nous allons afficher une analyse statistique des données permettant d'expliquer la varible qualité de l'air."
+                          "Ici nous allons afficher une analyse statistique des données permettant d'expliquer la varible qualité de l'air.",
+                         downloadLink("downloadRmd", "Télécharger")
                           # withMathJax(includeMarkdown("RMarkdownFile.md")
                  ))
       )
