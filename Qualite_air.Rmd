@@ -22,7 +22,7 @@ library("FactoMineR")
 
 ## a) Présentation des données
 
-Les donnée météorologiques issues de Meteostat que nous avons présenté
+Les données météorologiques issues de Meteostat que nous avons présenté
 dans les onglets *'Presentation'* et illustré dans les onglets *'Carte
 intéractive'* et *'Données meteo'* représente un ensemble de 10
 variables de type Float64:
@@ -208,7 +208,12 @@ deux groupes d'individus.
 
 Nous faisons dans un premier temps un modèle logistique complet avec
 l'ensemble des variables explicatives, et nous cherchons un modèle final
-par le biais d'une selection de modèle par élimination descendante:
+par le biais d'une selection de modèle par élimination descendante avec
+un critère de test de rapport de vraissemblance (Likelihood Ratio Test).
+
+ichez les résultats de l'ANOVA
+
+print(resultat_anova)
 
 ```{r}
 # 1. Ajustez le modèle complet
@@ -218,10 +223,42 @@ mod_complet <- glm(qualite_air_groupe ~ tavg + prcp + wspd + wpgt + pres + Vent_
 mod_2 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + pres + Vent_x + Vent_y, data = dt_qualite_air, family = "binomial")
 
 # 3. Comparez les deux modèles en utilisant la fonction anova()
-anova(mod_complet, mod_2)
+anova(mod_complet, mod_2, test="Chisq")
 
-# Affichez les résultats de l'ANOVA
-print(resultat_anova)
+summary(mod_2)
 
+## On recommence avec un autre modèle où on enlève pres
+mod_3 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + Vent_x + Vent_y, data = dt_qualite_air, family = "binomial")
 
+anova(mod_2, mod_3, test="Chisq")
+
+# on garde le modèle 3
+summary(mod_3)
 ```
+
+Tous les paramètres de notre modèles sont significatifs.
+
+Regardons en detail les effets de ces variables
+
+```{r}
+summary(mod_3)
+```
+
+D'après ce résumé, on retrouve que
+
+-   une augmentation de la température moyenne (tavg) est associée à une
+    augmentation de la probabilité de mauvaise qualité de l'air par
+    rapport à la bonne qualité de l'air
+
+-   à l'inverse, une augmentation des précipitation et de la vitesse du
+    vent est associée à une augmentation de la probabilité de bonne
+    qualité de l'air
+
+-   Pour les valeurs de vents, on reprend les transformations
+    trigonométriques qui nous avaient permis de creer ces variables, et
+    on retoruve qu'une augmentation de vent_x et de vent_y, donc un vent
+    vers l'est et le nord est associé à une augmentation de la
+    probabilité de bonne qualité de l'air. Aussi, puisque le coefficient
+    est deux fois superieur pour vent_y, on peut dire que la direction
+    du vent associé à une augmentation de la probabilité de bonne
+    qualité de l'air est NNE.
