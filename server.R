@@ -14,10 +14,22 @@ shinyServer(function(input, output) {
   # Downloadable csv of selected dataset ----
   output$downloadData <- downloadHandler(
     filename = function() {
-      paste(input$dataset, ".csv", sep = "")
+      paste("Rapport", sep = ".")
     },
     content = function(file) {
-      write.csv(datasetInput(), file, row.names = FALSE)
+      src <- normalizePath("Rmd.Rmd")
+    }
+  )
+  
+  #Téléchargement du fichier Rmd 
+  output$downloadRmd <- downloadHandler(
+    filename = function() {
+      # Use the selected dataset as the suggested file name
+      paste0(input$dataset, ".csv")
+    },
+    content = function(file) {
+      # Write the dataset to the `file` that will be downloaded
+      write.csv(data(), file)
     }
   )
   
