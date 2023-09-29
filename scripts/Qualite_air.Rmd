@@ -2,9 +2,11 @@
 title: "Qualite de l'air"
 author: "Renée Le Clech"
 date: '2023-09-27'
-output: html_document
-editor_options: 
-  markdown: 
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
+  markdown:
     wrap: 72
 ---
 
@@ -20,10 +22,10 @@ library("FactoMineR")
 
 ## a) Présentation des données
 
-Les donnée météorologiques issues de Meteostat que nous avons présenté
-dans les onglets *'Presentation'* et illustré dans les onglets *'Carte
-intéractive'* et *'Données meteo'* représente un ensemble de 10
-variables de type Float64:
+Les données météorologiques issues de Meteostat que nous avons
+présentées dans les onglets 'Présentation' et illustrées dans les
+onglets 'Carte interactive' et 'Données météo' représentent un ensemble
+de 10 variables de type Float64.
 
 | Variables |             Description              | Unité |
 |:---------:|:------------------------------------:|:-----:|
@@ -81,18 +83,18 @@ df <- read.csv("C:/Users/renax/Desktop/ACO/S9/Programmation_R/Projet_meteo/Proje
 set.seed(45L)
 dt_qualite_air <- data.table(df) # transformation en datatable
 
-#summary(dt_qualite_air[,23:31]) # résumé pour les données meteo, pour verifier les classes des colonnes
+summary(dt_qualite_air[,23:31]) # résumé pour les données meteo, pour verifier les classes des colonnes
 ```
 
-Variable à expliquer est la colonne *code_qual*. Il s'agit une variable
-catégorielle 4 modalites : "1", "2", "3", "4", correspondant
-respectivement aux catégories d'air "Bon", "Moyen", "Dégradé" et
-"Mauvais".
+La variable à expliquer est la colonne code_qual'. Il s'agit d'une
+variable catégorielle avec 4 modalités : "1", "2", "3", "4",
+correspondant respectivement aux catégories d'air "Bon", "Moyen",
+"Dégradé" et "Mauvais".
 
-En effet on notera que dans notre jeu de données, l'indice ATMO va "que"
-de Bon à Mauvais, les modalités "Très mauvais" et "Extrèmement mauvais"
-ne sont ainsi pas présentes pour la ville de Rennes entre Septembre 2021
-et Septembre 2022.
+Il est important de noter que dans notre jeu de données, l'indice ATMO
+ne va que de Bon" à "Mauvais". Les modalités "Très mauvais" et
+"Extrêmement mauvais" ne sont donc pas résentes pour la ville de Rennes
+entre septembre 2021 et septembre 2022.
 
 ## c) Preparation des données
 
@@ -101,9 +103,25 @@ préalable nos données.
 
 ### i. Variable réponse
 
+Gestion des NA:
+
+On remarque dans le summary des données meteo qu'on retrouve des données
+manquantes pour les colonnes rafales de vent (wgpt), precipitaition
+(prcp), direction du vent (wdir) et pression (pres).
+
+Nous decidons d'enlever les lignes qui présente des données manquantes.
+
+```{r}
+# pour wdir
+dt_qualite_air <- dt_qualite_air[which(! is.na(dt_qualite_air$wpgt)),]
+dt_qualite_air <- dt_qualite_air[which(! is.na(dt_qualite_air$prcp)),]
+
+# summary(dt_qualite_air[,23:31])
+```
+
 Les recommandations comportementales établies par le ministère en charge
 de la Santé sont associées aux différents qualificatifs de l'indice
-ATMO. Les recommandations distingue deux situations: les indices "Bon
+ATMO. Les recommandations distinguent deux situations: les indices "Bon
 (1)" ou "Mauvais (2)" et les indices "Degradé (3)" à "Extrèmement
 Mauvais (6)". Dans le premier cas, il existe des recommandations
 d'avantage préventive, et dans le deuxième cas il y a des
@@ -136,8 +154,8 @@ de 10° .
 
 Pour palier à cas, nous convertissons les degrés en une représentation
 plus adaptée pour notre modèle logistique. Nous récuperons les
-composantes x et y de la direction du vent par quelques traitement de
-trigonométrie:
+composantes x et y de la direction du vent par quelques traitements
+trigonométriques:
 
 ```{r}
 # Convertir les degrés en radians
@@ -146,12 +164,12 @@ dt_qualite_air <- dt_qualite_air %>%
 
 # Calculer les composantes x et y de la direction du vent
 dt_qualite_air <- dt_qualite_air %>%
-  mutate(Vent_x = cos(Angle_radians),
-         Vent_y = sin(Angle_radians))
+  mutate(Vent_x_est = cos(Angle_radians),
+         Vent_y_nord = sin(Angle_radians))
 ```
 
-Avant de creer notre premier modèle nous remarquons que parmis nos
-données explicatives potentielles, certains sont liées. La température
+Avant de créer notre premier modèle nous remarquons que parmis nos
+données explicatives potentielles, certaines sont liées. La température
 moyenne est instrinsèquement liée à la température minimale et la
 température maximale. Ainsi, par principe de parcimonie nous ne gardons
 que la température moyenne sur les 3 variables de température.
@@ -166,7 +184,8 @@ varibles et aux individus.
 
 ```{r}
 # Selection des colonnes qui nous interesse i.e les variables explicatives et la variable réponse
-res<- PCA(dt_qualite_air[, c(22,23,25,27,28,29,30,32,34,35)],scale.unit = TRUE, quali.sup = 8)
+res<- PCA(dt_qualite_air[, c(22,23,24,25,28,29,30,32,34,35)],scale.unit = TRUE, quali.sup = 8)
+# enlever wdir
 
 # Afficher le graphique PCA
 plot(res, habillage = 8, label = "none")
@@ -190,20 +209,70 @@ deux groupes d'individus.
 
 Nous faisons dans un premier temps un modèle logistique complet avec
 l'ensemble des variables explicatives, et nous cherchons un modèle final
-par le biais d'une selection de modèle par élimination descendante:
+par le biais d'une selection de modèle par élimination descendante avec
+un critère de test de rapport de vraissemblance (Likelihood Ratio Test).
+
+ichez les résultats de l'ANOVA
+
+print(resultat_anova)
 
 ```{r}
 # 1. Ajustez le modèle complet
-mod_complet <- glm(qualite_air_groupe ~ tavg + prcp + wspd + wpgt + pres + Vent_x + Vent_y, data = dt_qualite_air, family = "binomial")
+mod_complet <- glm(qualite_air_groupe ~ tavg + prcp + wspd + wpgt + pres + Vent_x_est + Vent_y_nord, data = dt_qualite_air, family = "binomial")
 
 # 2. Ajustez le modèle 2 (sans la variable 'wpgt')
-mod_2 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + pres + Vent_x + Vent_y, data = dt_qualite_air, family = "binomial")
+mod_2 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + pres + Vent_x_est + Vent_y_nord, data = dt_qualite_air, family = "binomial")
 
 # 3. Comparez les deux modèles en utilisant la fonction anova()
-resultat_anova <- anova(mod_complet, mod_2, test = "Chisq")
+anova(mod_complet, mod_2, test="F")
 
-# Affichez les résultats de l'ANOVA
-print(resultat_anova)
+summary(mod_2)
 
+## On recommence avec un autre modèle où on enlève pres
+mod_3 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + Vent_x_est + Vent_y_nord, data = dt_qualite_air, family = "binomial")
 
+anova(mod_2, mod_3, test="F")
+
+# on garde le modèle 3
+summary(mod_3)
 ```
+
+Tous les paramètres de notre modèles sont significatifs.
+
+Regardons en detail les effets de ces variables.D'après le résumé, on
+retrouve que:
+
+-   La pression atmosphérique et les bourasques de vent ne sont pas
+    associées à la probabilité de bonne ou mauvaise qualité de l'air
+-   L'augmentation de la température moyenne (tavg) est associée à
+    l'augmentation de la probabilité de mauvaise qualité de l'air par
+    rapport à la bonne qualité de l'air
+-   A l'inverse, une augmentation des précipitation et de la vitesse du
+    vent est associée à une augmentation de la probabilité de bonne
+    qualité de l'air
+-   Pour les valeurs de vents, on reprend les transformations
+    trigonométriques qui nous avaient permis de créer ces variables, et
+    on retrouve qu'une augmentation de vent_x et de vent_y, donc un vent
+    vers l'est et vers le nord est associé à une augmentation de la
+    probabilité de bonne qualité de l'air. Aussi, puisque le coefficient
+    est deux fois superieur pour vent_y, on peut dire que la direction
+    du vent associé à une augmentation de la probabilité de bonne
+    qualité de l'air est NNE.
+
+## Conclusion
+
+Notre modèle suggère que la pluie, la température et le vent (la
+direction et la vitesse) ont une influence sur l'indice ATMO, qui rend
+compte de la qualité de l'air. La météo semble ainsi pouvoir expliquer
+du moins en partie la qualité de l'air. Les bourasques de vents et la
+pression atmosphérique n'ont pas d'influence sur l'indice ATMO.
+
+Les informations que nous avons mises en évidence sont des premiers
+resultats et de nombreux facteurs, d'avantage liés à la cause des
+emission des gaz polluants pourraient permettre de mieux comprendre
+l'indice de ATMO.
+
+La meteo nous permet ainsi d'expliquer en partie la qualité de l'air, et
+ainsi, il semblerait être possible de prévoir la qualité de l'air, avec
+des informations sur les emissions de polluants croisées avec des
+données météo prévues par les institutions spécialisées.
