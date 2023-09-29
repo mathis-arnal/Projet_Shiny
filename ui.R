@@ -3,6 +3,8 @@ library(colourpicker)
 library(shinydashboard)
 library(knitr)
 library(fresh)
+library(leaflet)
+library(dygraphs)
 library(shinyWidgets)
 
 rmdfiles <- c("Qualite_air.Rmd")
