@@ -7,7 +7,7 @@ library(leaflet)
 library(dygraphs)
 library(shinyWidgets)
 
-rmdfiles <- c("Qualite_air.Rmd")
+rmdfiles <- c("scripts/Qualite_air.Rmd")
 sapply(rmdfiles, knit, quiet = T)
 
 # creation du theme de l'application
@@ -138,7 +138,7 @@ shinyUI(
                  tabItem("Rapport", 
                           "Ici nous allons afficher une analyse statistique des données permettant d'expliquer la varible qualité de l'air.",
                          downloadButton("report", "Generate report"),
-                         includeMarkdown("Qualite_air.md")
+                         includeMarkdown("scripts/Qualite_air.md")
                  ))
       )
     )

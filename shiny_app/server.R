@@ -14,9 +14,9 @@ library(xts)
 shinyServer(function(input, output) {
   
   #Nos jeux de données 
-  meteostat_data <- fread("meteostat_data.csv", header=TRUE)
+  meteostat_data <- fread("data/meteostat_data.csv", header=TRUE)
   meteostat_data$time <- as.Date(meteostat_data$time, format="YYYY-MM-DD")
-  air_quality <- fread("quality_index_rennes.csv")
+  air_quality <- fread("data/quality_index_rennes.csv")
   
   #Lien indice ATMO
   output$lien <- renderUI({
