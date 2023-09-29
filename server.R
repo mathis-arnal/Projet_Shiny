@@ -1,22 +1,4 @@
-library(shiny)
-library(fresh)
-library(data.table)
-library(rmarkdown)
-library(tufte)
-library(fontawesome)
-library(ggmap)
-library(leaflet)
-library(dygraphs)
-library(xts)
-
-
-
 shinyServer(function(input, output) {
-  
-  #Nos jeux de données 
-  meteostat_data <- fread("meteostat_data.csv", header=TRUE)
-  meteostat_data$time <- as.Date(meteostat_data$time, format="YYYY-MM-DD")
-  air_quality <- fread("quality_index_rennes.csv")
   
   #Lien indice ATMO
   output$lien <- renderUI({

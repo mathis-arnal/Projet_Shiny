@@ -1,15 +1,3 @@
-library(shiny)
-library(colourpicker)
-library(shinydashboard)
-library(knitr)
-library(fresh)
-library(leaflet)
-library(dygraphs)
-library(shinyWidgets)
-
-rmdfiles <- c("scripts/Qualite_air.Rmd")
-sapply(rmdfiles, knit, quiet = T)
-
 # creation du theme de l'application
 mytheme <- create_theme(
   adminlte_color(
@@ -138,7 +126,7 @@ shinyUI(
                  tabItem("Rapport", 
                           "Ici nous allons afficher une analyse statistique des données permettant d'expliquer la varible qualité de l'air.",
                          downloadButton("report", "Generate report"),
-                         includeMarkdown("scripts/Qualite_air.md")
+                         includeMarkdown("Qualite_air.md")
                  ))
       )
     )
