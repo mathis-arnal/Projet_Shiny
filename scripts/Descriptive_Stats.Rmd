@@ -19,10 +19,12 @@ meteostat_data <- fread("meteostat_data.csv", header=TRUE)
 meteostat_data$time <- as.Date(meteostat_data$time, format="YYYY-MM-DD")
 ```
 
-# On choisit la ville pour laquelle on prendre les données (faire une liste déroulante)
+# On choisit la ville et les dates pour laquelle on prendre les données (faire une liste déroulante)
 ```{r}
 City <- "Rennes"
+time_range <- seq(from = start_date, to = end_date, by = "1 day")
 meteostat_data <- meteostat_data[Localisation== City]
+meteostat_data <- meteostat_data [time %in% time_range]
 ```
 
 On fait des graphes dynamiques à l'aide de dygraphs, ici la temperature moyenne
@@ -61,12 +63,11 @@ dygraph(Temp_series, main = "Temperature (°C)",
 Pour faire un graphe plus beau, on peut coder une partie en CSS, et ajouter
 le fichier CSS ! (voir : https://rstudio.github.io/dygraphs/gallery-css-styling.html)
 
-```{r}
-
-```
+   
 
 
-On affiche la précipitation comme dans Meteostat !
+#
+RangeOn affiche la précipitation comme dans Meteostat !
 ```{r}
 dyBarChart <- function(dygraph) {
   dyPlotter(dygraph = dygraph,

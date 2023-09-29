@@ -1,5 +1,8 @@
 #####  dygraphs
 library(dygraphs)
+library(data.table)
+
+
 lungDeaths <- cbind(mdeaths, fdeaths)
 dygraph(lungDeaths)
 
@@ -7,10 +10,11 @@ class(mdeaths)
 
 View(lungDeaths)
 
-ind_bretagne_test <- read.csv("C:/Users/renax/Desktop/ACO/S9/Programmation_R/ind_bretagne_test.csv", sep=";")
+ind_bretagne_test <- fread("ind_bretagne_csv.csv",sep = ";", header=TRUE )
 head(ind_bretagne_test$date_ech)
 class(ind_bretagne_test$date_ech)
-Date=as.POSIXct(strptime(ind_bretagne_test$date_ech, "%d/%m/%Y %H:%M"))
+ind_bretagne_test[, date_ech := substr(date_ech, 1, 10)]
+Date=as.POSIXct(strptime(ind_bretagne_test$date_ech, "%d/%m/%Y"))
 ind_bretagne_test$Date <- Date
 dygraph(ind_bretagne_test$code_no2)
 x<-ind_bretagne_test$code_no2
