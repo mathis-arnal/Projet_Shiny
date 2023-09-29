@@ -1,13 +1,3 @@
-library(shiny)
-library(colourpicker)
-library(shinydashboard)
-library(knitr)
-library(fresh)
-library(shinyWidgets)
-
-rmdfiles <- c("Qualite_air.Rmd")
-sapply(rmdfiles, knit, quiet = T)
-
 # creation du theme de l'application
 mytheme <- create_theme(
   adminlte_color(
