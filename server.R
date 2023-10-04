@@ -25,12 +25,9 @@ shinyServer(function(input, output) {
   )
   
   #Téléchargement du fichier Rmd ne fonctionne pas
-  output$report <- downloadHandler(
-    filename = "report.html",
-    content = function(file) {
-    rmarkdown::render( "Qualite_air.Rmd", 
-                      output_file = file,
-                      envir = new.env(parent = globalenv()))
+  output$rapport <- renderUI({
+      url <- a("Rapport", href = "https://stackoverflow.com/questions/62708534/extract-download-link-from-html-in-r-shiny-app")
+      tagList(url)
     })
   
   # Affichage de la carte
@@ -45,29 +42,85 @@ shinyServer(function(input, output) {
         m
   })
   
-  # Input$idDateRange
-  # Input$idCheckair
+  # l'objet v permet de maîtriser l'affichage des graphiques
+  v <- reactiveValues(doPlot = FALSE)
+  
+  # doPlot peut prendre la valeur TRUE ou FALSE 
+  # lorsque l'on clique sur Afficher les graphiques
+  # doPlot prend la valeur TRUE
+  observeEvent(input$go, {
+    # 0 will be coerced to FALSE
+    # 1+ will be coerced to TRUE
+    v$doPlot <- input$go
+  })
+  
+  # si on modifie le paramètre ville, les dates alors doPlot 
+  # prend la valeur FALSE, il faut dont re-cliquer pour afficher 
+  # les graphiques actualisés
+  observeEvent(input$ville, {
+    v$doPlot <- FALSE
+  })
+
+  observeEvent(input$idDateRange, {
+    v$doPlot <- FALSE
+  }) 
+  
+  # Le graphique concernant la qualité de l'air s'affiche automatiquement 
+  output$plotAir <- renderPlot({
+     if (input$idCheckair == T){
+      plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'airT", xlab="Évolution dans le temps")
+      ##plot Évolution qualité de l'air
+    } else {
+      plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'air", xlab="Évolution dans le temps")
+    }
+      
+  })
   # Affichage du graphique représentant l'évolution des températures
   output$plotRainTemp <- renderDygraph({
-    Temp<-cbind(meteostat_data$tavg,meteostat_data$tmax,meteostat_data$tmin)
-    Temp_series <- xts(x = Temp, order.by = meteostat_data$time)
-    colnames(Temp_series) <- c("tavg", "tmax", "tmin")
-    dygraph(Temp_series, main = "Suivi des  températures")
+    if (v$doPlot == FALSE) {return()
+    } else {
+    if (input$go==T){# tant que l'utilisateur n'a pas validé ses paramètres aucun graphique ne s'affiche
+      date_start <- input$idDateRange[1]#affiche  la date de départ sous la forme [1] "2020-01-01"
+      date_end <- input$idDateRange[2]#affiche  la date de départ sous la forme [1] "2023-09-04"
+      Temp<-cbind(meteostat_data$tavg,meteostat_data$tmax,meteostat_data$tmin)
+      Temp_series <- xts(x = Temp, order.by = meteostat_data$time)
+      colnames(Temp_series) <- c("tavg", "tmax", "tmin")
+      dygraph(Temp_series, main = "Suivi des  températures")
+    } else {
+      plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'air", xlab="Évolution dans le temps")
+    }}
+    
     })
   
   # Affichage du graphique représentant l'évolution de la pression
   output$plotPres <- renderDygraph({
+    if (input$go==T){
     precipitation<-xts(x=meteostat_data$prcp,order.by = meteostat_data$time)
     colnames(precipitation)<-"precipitation(mm)"
     dygraph(precipitation, main = "Suivi des précipitations")%>%
       dySeries("precipitation(mm)",stepPlot = TRUE, fillGraph = TRUE, color = "blue")
+    } else {## mettre un graph par défaut
+      plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'air", xlab="Évolution dans le temps")
+    }
   })
-?dygraph
+
   # Affichage du graphique représentant l'évolution du vent
   output$plotWind <- renderPlot({
+    if (input$go==T){
+      plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de ventT", xlab="Évolution dans le temps")
+    } else {
+    plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'air", xlab="Évolution dans le temps")
+    }
     #mettre lignes de codes pour créer le graphique
     #plot() 
   })
+  
+  # Création du modèle par l'utilisateur et affichage de la matrice de confusion
+  output$modelsumr <- renderPrint({
+    
+  })
+  
+
   
   })
 

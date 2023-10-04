@@ -14,6 +14,9 @@ library(tufte)
 library(fontawesome)
 library(ggmap)
 library(xts)
+library(dplyr)
+library(car)
+library(FactoMineR)
 
 ## ouverture de nos jeux de données 
 

@@ -24,9 +24,9 @@ shinyUI(
     dashboardSidebar(width = 250,
                      sidebarMenu(id  = "menu",
                      menuItem("Notre projet", tabName = "Projet"),
-                     menuItem("Carte interactive", tabName = "Carte"), 
-                     menuItem("Données météo", tabName = "Météo"),
-                     menuItem("Qualité de l'air", tabName = "Rapport"),
+                     menuItem("Carte interactive", tabName = "Carte", icon = icon("map")), 
+                     menuItem("Données météo", tabName = "Météo", icon = icon("cloud-rain")),
+                     menuItem("Qualité de l'air", tabName = "Rapport", icon = icon("searchengin")),
                      
                      conditionalPanel('input.menu == "Météo"',
                      tags$style("p {font-size: 18px;font-weight: bold}"),
@@ -46,8 +46,11 @@ shinyUI(
                                       start = "2020-01-01", end = "2023-09-22", format = "yyyy-mm-dd",
                                       language = "fr", separator = " to "),
                        checkboxInput(inputId = "idCheckair", label = "Indice de qualité de l'air"),
+                      ##Bouton poour lancer l'analyse 
+                       div(style = "position:relative; left:calc(15%);", actionButton( "go", "Afficher les graphiques")),
                        selectInput("dataset", "Choisissez le jeu de données que vous souhaitez télécharger :",
                                  choices = c("Données météo", "Données indice qualité de l'air")),
+                     
                         # Bouton
                        div(style = "position:relative; left:calc(25%);",downloadButton("downloadData","Télécharger"))))
                      
@@ -64,7 +67,9 @@ shinyUI(
         font-weight: bold;
         font-size: 24px;
       }
-    '))),
+    '),
+      tags$head(tags$style(type='text/css', 
+                           ".slider-animate-button { font-size: 20pt !important; }")))),
       
       # navbarPage
       navbarPage("Des bottes et un ciré ?", 
@@ -95,41 +100,70 @@ shinyUI(
                  # deuxième onglet carte
                   tabItem("Carte",
                           fluidRow(
+                            column(width = 10,
                             box(title = "Météo en bretagne du 22/09/2021 au 22/09/2023", leafletOutput("carte",
-                                                                                height = 500, width = 950), width = 10), 
+                                                                                height = 500, width = 950), width = 12)), 
+                            column(width = 2, checkboxGroupInput(inputId = "idCheckGroupMap", label = "Que voulez-vous observer ?", selected = 3,
+                                                                 choiceNames =
+                                                                   list(icon("cloud-rain"), icon("wind"),
+                                                                        icon("temperature-half"), "Indice ATMO"),
+                                                                 choiceValues =
+                                                                   list("Pluie", "Vent", "Températures", "ATMO"))), 
                             div(style = "position:relative; left:calc(25%);", sliderInput("Date",
                                                                                           "Date sélectionnée",
                                                                                           min = as.Date("2021-09-22","%Y-%m-%d"),
                                                                                           max = as.Date("2023-09-22","%Y-%m-%d"),
                                                                                           value = as.Date("2021-09-22"), 
                                                                                           timeFormat="%Y-%m-%d", 
-                                                                                          width = "50%")
+                                                                                          width = "50%",
+                                                                                          animate = animationOptions(interval = 300,
+                                                                                                                     playButton = icon('play', "fa-2x"),
+                                                                                                                     pauseButton = icon('pause', "fa-2x"))))
+                                
+                                
                                          
                                         )
                           
-                          )
+                          
                  ),
                  
                  # troisième onglet "Données météo"
                   tabItem("Météo", 
-                          "Ici nous allons afficher les données météo.",
+                          "Ici, vous pouvez observer les données météo de la ville qui vous intéresse sur une période souhaitée
+                          (entre le 22/09/2021 et 22/09/2023), une fois que vous avez sélectionner vos 
+                          paramètres, cliquez sur -Afficher les graphiques-." ,
                           fluidRow(
                             box(title = "La température ...", dygraphOutput("plotRainTemp")
                           ),
                           box(title = "La pluie ... ",dygraphOutput("plotPres")
                           ),
                           box(title = "Titre graph évolution du vent", "Box content", plotOutput("plotWind")
+                          ),
+                          box(title = "Évolution de l'indice de qualité de l'air", "Box content", plotOutput("plotAir")
                           )
                           )),
                  
                  # troisème onglet "Qualité de l'air"
-                 tabItem("Rapport", 
-                          "Ici nous allons afficher une analyse statistique des données permettant d'expliquer la varible qualité de l'air.",
-                         downloadButton("report", "Generate report"),
-                         includeMarkdown("Qualite_air.md")
+                 tabItem(
+                   "Rapport", 
+                   navbarPage( "" ,
+                              tabPanel("Notre rapport", "Ici nous allons afficher une analyse statistique des données permettant d'expliquer la varible qualité de l'air.",
+                          uiOutput("rapport"),
+                         includeMarkdown("Qualite_air.md")),
+                              tabPanel("A vous de jouer !", "ici on peut faire notre modèle",###meme que indice qualité air
+                                       checkboxGroupInput(inputId = "idCheckGroup", label = "Étape 1 : Quelles variables souhaitez vous sélectionner pour votre modèle ?", selected = 3,
+                                                          choices = c("tempréature moyenne" = 1, "température minimale" = 2, "température maximale" = 3, "précipitations quotidienne" = 4, "direction moyenne du vent"= 5, 
+                                                                      "vitesse moyenne du vent"= 6, "rafale de vent maximale" = 7, "pression au niveau de la mer" = 8,
+                                                                      "total d'ensoleillement quotidien" = 9)),
+                                       dateRangeInput(inputId = "idDateRange2", label = "Sélectionner la période sur laquelle vous voulez entraîner votre modèle : ",
+                                                      start = "2021-09-22", end = "2023-09-22", format = "yyyy-mm-dd",
+                                                      language = "fr", separator = " to "),
+                                       box(title = "Votre analyse", width = 8, solidHeader = TRUE,
+                                           verbatimTextOutput(outputId = "modelsumr")) 
+                                       )
                  ))
       )
     )
-    )
-)
+    )))
+
   
