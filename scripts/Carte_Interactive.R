@@ -7,24 +7,28 @@ library(leaflet)
 library(ggmap)
 # importation du jeu de donnes
 dataMeteo <- read.table("data/meteostat_data.csv",sep=",", header=TRUE)
+# importation du jeu de donnée de la qualité de l'air pour recuperer la colonne qui nous interesse
+datatemp<-read.csv("data/quality_index_rennes.csv")
+dataMeteo$qualite_air<-datatemp$code_qual # colonne récupérée
+rm(datatemp) # on supprime le jeu de données
 
 # premiere carte "test" avec juste les pointeurs
-m <- leaflet() %>%
-  addTiles() %>%  # Add default OpenStreetMap map tiles
-  addMarkers(lng = -1.6788, lat = 48.1123, popup = "Rennes") %>%
-  addMarkers(lng = -4.4886, lat = 48.3917, popup = "Brest") %>%
-  addMarkers(lng = -4.1035, lat = 47.9959, popup = "Quimper") %>%
-  addMarkers(lng = -2.7617, lat = 48.5144, popup = "Saint- Brieuc") %>%
-  addMarkers(lng = -2.7576, lat = 47.6572, popup = "Vannes") 
-
-m
+# m <- leaflet() %>%
+#   addTiles() %>%  # Add default OpenStreetMap map tiles
+#   addMarkers(lng = -1.6788, lat = 48.1123, popup = "Rennes") %>%
+#   addMarkers(lng = -4.4886, lat = 48.3917, popup = "Brest") %>%
+#   addMarkers(lng = -4.1035, lat = 47.9959, popup = "Quimper") %>%
+#   addMarkers(lng = -2.7617, lat = 48.5144, popup = "Saint- Brieuc") %>%
+#   addMarkers(lng = -2.7576, lat = 47.6572, popup = "Vannes") 
+# 
+# m
 ##################################################################################
-######## WIND
+######## WIND DIRECTION
 
 # recuperation de l'orientation du vent pour chaque ville pour une date donnée:
 # attention l'ordre doit etre toujours le meme:
 # rennes, brest, quimper, saint-brieuc, vannes
-date="2021-09-25"
+date="2021-09-30"
 # recuperation
 VectwindDir= as.vector(dataMeteo[which(dataMeteo$time==date),7])
 VectwindDir
@@ -194,8 +198,14 @@ m <- leaflet() %>%
   
   addMarkers(lng = -2.7576, lat = 47.6572, 
              icon = prcpVannesIcon,
-             popup = paste("vannes: ",Vectprcp[5], "mm")) 
+             popup = paste("Vannes: ",Vectprcp[5], "mm")) 
 
 m
+##################################################################################
+# QUALITE DE L'AIR'
 
-
+# rennes, brest, quimper, saint-brieuc, vannes
+# date="2021-09-25"
+# recuperation
+# VectQualAir= as.vector(dataMeteo[which(dataMeteo$qual==date),13])
+# VectQualAir
