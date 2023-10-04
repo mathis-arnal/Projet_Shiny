@@ -13,37 +13,103 @@ library(data.table)
 
 # Importation du jeu de données ind_bretagne et du jeu de données meteostat 
 ```{r}
-meteostat_data <- fread("meteostat_data.csv", header=TRUE)
-quality_index <- fread("ind_bretagne_csv.csv",sep = ";", header=TRUE )
+data_path <- file.path("..", "data")
+meteostat_data <- fread(file.path(data_path,"meteostat_data.csv"), header=TRUE)
+quality_index_rennes <- fread(file.path(data_path,"ind_bretagne_csv.csv"),
+                                  sep = ";", header=TRUE, dec = "." )
+quality_index_brest <-  fread(file.path(data_path,"ind_bretagne-Brest.csv"),
+                              sep = ";", header=TRUE,dec = "." )
+quality_index_saint_brieuc <-  fread(file.path(data_path,"ind_bretagne-Saint-Brieuc.csv"),
+                              sep = ",", header=TRUE )
+quality_index_vannes <-  fread(file.path(data_path,"ind_bretagne-Vannes.csv"),
+                              sep = ";", header=TRUE )
+quality_index_quimper <- fread(file.path(data_path,"ind_bretagne-Quimper.csv"),
+                              sep = ",", header=TRUE )
+
 ```
 
-On va mettre les colonnes représentant le jour au même format
+On va mettre les colonnes représentant le jour au même format pour pouvoir merge
 ```{r}
 meteostat_data[, time := substr(time, 1, 10)]
-quality_index[, date_ech := substr(date_ech, 1, 10)]
+quality_index_rennes[, date_ech := substr(date_ech, 1, 10)]
+quality_index_brest[, date_ech := substr(date_ech, 1, 10)]
+quality_index_saint_brieuc[, date_ech := substr(date_ech, 1, 10)]
+quality_index_vannes[, date_ech := substr(date_ech, 1, 10)]
+quality_index_quimper[, date_ech := substr(date_ech, 1, 10)]
+```
+
+On crée la variable Localisation
+```{r}
+quality_index_rennes$Localisation <- "Rennes"
+quality_index_brest$Localisation <- "Brest"
+quality_index_saint_brieuc$Localisation <- "Saint-Brieuc"
+quality_index_vannes$Localisation <- "Vannes"
+quality_index_quimper$Localisation <- "Quimper"
+
+
+```
+
+Pour le merge, on homogénise le type de certaine col en numérique
+```{r}
+# Function to replace commas with periods and convert to numeric
+col_as_num <- c("x_wgs84","y_wgs84","x_reg","y_reg","epsg_reg")
+convert_and_replace <- function(column) {
+  as.numeric(gsub(",", ".", column))
+}
+quality_index_rennes[, (col_to_change) := lapply(.SD, convert_and_replace),
+                     .SDcols = col_to_change]
+
+quality_index_brest[, (col_to_change) := lapply(.SD, convert_and_replace),
+                     .SDcols = col_to_change]
+quality_index_saint_brieuc[, (col_to_change) := lapply(.SD, convert_and_replace),
+                     .SDcols = col_to_change]
+quality_index_vannes[, (col_to_change) := lapply(.SD, convert_and_replace),
+                     .SDcols = col_to_change]
+quality_index_quimper[, (col_to_change) := lapply(.SD, convert_and_replace),
+                     .SDcols = col_to_change]
+
+```
+
+On fait la même chose pour la colonne date_ech
+```{r}
+col_as_str <-"date_ech"
+
+quality_index_rennes[, (col_as_str) := lapply(.SD, as.character), .SDcols = col_as_str]
+quality_index_brest[, (col_as_str) := lapply(.SD, as.character), .SDcols = col_as_str]
+quality_index_saint_brieuc[, (col_as_str) := lapply(.SD, as.character), .SDcols = col_as_str]
+quality_index_vannes[, (col_as_str) := lapply(.SD, as.character), .SDcols = col_as_str]
+quality_index_quimper[, (col_as_str) := lapply(.SD, as.character), .SDcols = col_as_str]
+
+
+```
+
+On va merge toutes les données ensemble 
+```{r}
+col_names <- colnames(quality_index_brest)
+
+all_quality_index <- merge(quality_index_rennes, quality_index_brest, by = col_names,all=TRUE )
+all_quality_index <- merge(all_quality_index,quality_index_saint_brieuc, by = col_names,all=TRUE)
+all_quality_index <- merge(all_quality_index,quality_index_vannes, by = col_names,all=TRUE)
+all_quality_index <- merge(all_quality_index,quality_index_quimper, by = col_names,all=TRUE)
+
 ```
 
 On va utiliser les mêmes noms pour Localisation et time pour pouvoir merge les deux tableaux
 ```{r}
-setnames(quality_index, old = "lib_zone", new = "Localisation")
-setnames(quality_index, old = "date_ech", new = "time")
+setnames(all_quality_index, old = "date_ech", new = "time")
 
 ```
 
-Pareil pour les modalités 
-```{r}
-quality_index[, Localisation := ifelse(Localisation == "Rennes MÃ©tropole", "Rennes", Localisation)]
-```
 
 # Création du jeu de données pour l'analyse stat
 
 ```{r}
-merged_data <- merge(quality_index, meteostat_data, by = c("time", "Localisation"))
+merged_data <- merge(all_quality_index, meteostat_data, by = c("time", "Localisation"))
 head(merged_data)
 ```
 Exportation du jeu de données
 ```{r}
-fwrite(merged_data, file ="quality_index_rennes.csv", sep = ",")
+fwrite(merged_data, file =file.path(data_path,"all_raw_data.csv"), sep = ",")
 ```
 
 
