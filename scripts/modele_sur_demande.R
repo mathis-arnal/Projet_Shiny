@@ -3,6 +3,7 @@ library("data.table")
 library("dplyr")
 library("car")
 library("FactoMineR")
+
 # ---------------------------------------------------------------------------#
 ######
 # importation des données
@@ -33,12 +34,8 @@ dt_qualite_air <- dt_qualite_air %>%
   mutate(Vent_x_est = cos(Angle_radians),
          Vent_y_nord = sin(Angle_radians))
 
-
  # ---------------------------------------------------------------------------#
 ######
-
-
-
 #######
 # creation du dataframe:
 # on ajoute directement la colonne d'interet de groupe de qualité de l'air:
@@ -56,13 +53,18 @@ tmax = FALSE
 wspd = TRUE   
 wpgt = FALSE            
 pres = TRUE
+## LAG 
+lag1=TRUE
+lag2=FALSE
+lag3=TRUE
 
 # en fonction des variables selectionnées, on cree un nouveau dataframe:
 
 if (prcp){ # si l'utilisateur a selectionne precipitation
   datamodele$prcp <-dt_qualite_air$prcp } # on ajoute la col au dataframe
 if (wdir){
-  datamodele$wdir <-dt_qualite_air$wdir}
+  datamodele$vent_x <-dt_qualite_air$Vent_x_est
+  datamodele$vent_y <-dt_qualite_air$Vent_y_nord}
 if (tmin){
   datamodele$tmin <-dt_qualite_air$tmin}
 if (tmax){
@@ -75,6 +77,42 @@ if (pres){
   datamodele$pres <-dt_qualite_air$pres}
 if (tavg){
   datamodele$tavg <-dt_qualite_air$tavg}
+
+## en fonction de ce data frame, on fait les lag:
+
+donnees_lagues1 <- datamodele %>%
+  mutate_all(~lag(.))
+colnames(donnees_lagues1) <- c("qualite_air_groupe_lag1", "prcp_lag1", "vent_x_lag1","vent_y_lag1","wspd_lag1", "pres_lag1","tavg_lag1")             
+
+donnees_lagues2 <- donnees_lagues1 %>%
+  mutate_all(~lag(.))
+colnames(donnees_lagues2) <- c("qualite_air_groupe_lag2", "prcp_lag2", "vent_x_lag2","vent_y_lag2","wspd_lag2", "pres_lag2","tavg_lag2")             
+
+
+donnees_lagues3 <- donnees_lagues2 %>%
+  mutate_all(~lag(.))
+colnames(donnees_lagues3) <- c("qualite_air_groupe_lag3", "prcp_lag3", "vent_x_lag3","vent_y_lag3","wspd_lag3", "pres_lag3","tavg_lag3")             
+
+
+# on juxtapose les lag s'ils sont selectionnés:
+if (lag1){
+  datamodele <- cbind(datamodele, donnees_lagues1[,-1])} 
+if (lag2){
+  datamodele <- cbind(datamodele, donnees_lagues2[,-1])}
+if (lag3){
+  datamodele <- cbind(datamodele, donnees_lagues3[,-1])}
+
+# en fonction des lags choisis, on enlèves les premières lignes
+if (lag3){
+  datamodele <- datamodele[-c(1:3),]
+} else if (lag2){  datamodele <- datamodele[-c(1:2),]
+}else if (lag1){
+  datamodele <- datamodele[-c(1),]
+}
+
+
+## -----------------------------------------------------##
+######
 
 ## Creation des data train (80%) et test (20%)
 
