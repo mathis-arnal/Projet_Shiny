@@ -167,8 +167,9 @@ shinyUI(
                                        div(style = "position:relative; left:calc(15%);", 
                                            actionButton( "allez", "Lancer mon analyse")),
                                        br(),
-                                       box(title = "Votre analyse", width = 8, solidHeader = TRUE,
-                                           verbatimTextOutput("modele")) 
+                                       box(title = "Votre analyse", width = 12, solidHeader = TRUE,
+                                           verbatimTextOutput("modele"), plotOutput("CM")
+                                           ) 
                                        )
                  ))
       )

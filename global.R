@@ -15,6 +15,7 @@ library(fontawesome)
 library(ggmap)
 library(xts)
 library(caret)
+library(dplyr)
 
 ## ouverture de nos jeux de données 
 
