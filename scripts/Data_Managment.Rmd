@@ -11,7 +11,8 @@ install.packages("data.table")
 library(data.table)
 ```
 
-# Importation du jeu de données ind_bretagne et du jeu de données meteostat 
+# Importation du jeu de données ind_bretagne pour toutes les villes
+  et du jeu de données meteostat 
 ```{r}
 data_path <- file.path("..", "data")
 meteostat_data <- fread(file.path(data_path,"meteostat_data.csv"), header=TRUE)
@@ -70,7 +71,7 @@ quality_index_quimper[, (col_to_change) := lapply(.SD, convert_and_replace),
 
 ```
 
-On fait la même chose pour la colonne date_ech
+On fait la même chose pour la colonne date_ech en character
 ```{r}
 col_as_str <-"date_ech"
 
@@ -83,7 +84,7 @@ quality_index_quimper[, (col_as_str) := lapply(.SD, as.character), .SDcols = col
 
 ```
 
-On va merge toutes les données ensemble 
+On va merge toutes les données de quality_index ensemble 
 ```{r}
 col_names <- colnames(quality_index_brest)
 
@@ -94,14 +95,15 @@ all_quality_index <- merge(all_quality_index,quality_index_quimper, by = col_nam
 
 ```
 
-On va utiliser les mêmes noms pour Localisation et time pour pouvoir merge les deux tableaux
+On va utiliser les mêmes noms pour Localisation et time pour pouvoir merge
+les  tableaux quality_index et meteostat_data 
 ```{r}
 setnames(all_quality_index, old = "date_ech", new = "time")
 
 ```
 
 
-# Création du jeu de données pour l'analyse stat
+# Création du jeu de données final
 
 ```{r}
 merged_data <- merge(all_quality_index, meteostat_data, by = c("time", "Localisation"))
