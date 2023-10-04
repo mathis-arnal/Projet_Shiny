@@ -3,7 +3,7 @@ library("data.table")
 library("dplyr")
 library("car")
 library("FactoMineR")
-
+library("ggplot2")
 # ---------------------------------------------------------------------------#
 ######
 # importation des données
@@ -20,8 +20,8 @@ dt_qualite_air <- dt_qualite_air[which(! is.na(dt_qualite_air$wpgt)),]
 dt_qualite_air <- dt_qualite_air[which(! is.na(dt_qualite_air$prcp)),]
 
 # creation de la colonnes qualite_air_groupe
-dt_qualite_air[, qualite_air_groupe := ifelse(code_qual %in% c(1, 2), "Groupe 1-2",
-                                              ifelse(code_qual %in% c(3, 4), "Groupe 3-4", "Other"))]
+dt_qualite_air[, qualite_air_groupe := ifelse(code_qual %in% c(1, 2), "Groupe_1-2",
+                                              ifelse(code_qual %in% c(3, 4), "Groupe_3-4", "Other"))]
 
 dt_qualite_air$qualite_air_groupe<- as.factor(dt_qualite_air$qualite_air_groupe)
 
@@ -113,7 +113,7 @@ if (lag3){
 
 ## -----------------------------------------------------##
 ######
-
+## Test du modeles avec les variables de l'utilisateur
 ## Creation des data train (80%) et test (20%)
 
 
@@ -144,14 +144,79 @@ mod.glm.LGOCV <- train(
   trControl = fitControl.LGOCV
 )
 
-pred.glm.grid <- predict(mod.glm.LGOCV,newdata=datamodele.test) # glm prediction
+# pred.glm.grid <- predict(mod.glm.LGOCV,newdata=datamodele.test) # glm prediction
 
 mod.glm.LGOCV$results
 
 pred.glm <- predict(mod.glm.LGOCV)
-####
-# ce qui nous permet de qualifier la modele
-confusionMatrix(data=pred.glm,reference=datamodele.train$qualite_air_groupe)
+
+###############
+# joli rendu:
+conf_matrix <- confusionMatrix(data = pred.glm, reference = datamodele.train$qualite_air_groupe)
+
+# un joli plot
+
+x<-data.frame(conf_matrix$table)
+TClass <- factor(x[,2])
+PClass <- factor(x[,1])
+Y      <- (x[,3])
+
+
+ggplot(data =  x, mapping = aes(x = TClass, y = PClass)) +
+  geom_tile(aes(fill = Y), colour = "white") +
+  geom_text(aes(label = sprintf("%1.0f", Y)), vjust = 1) +
+  scale_fill_gradient(low="white", high="#009194") +
+  theme_bw() + theme(legend.position = "none")
+
+##
+# petite morale sur l'accuracy, la sensi et la spéci:
+
+#Accuracy:
+if (conf_matrix$overall[1]>0.9){
+  accuracytxt="Votre accuracy est très bonne, bravo c'est un modèle qui semble bien prédire la qualité de l'air !"
+}else if (conf_matrix$overall[1]>0.70){
+  accuracytxt="Votre accuracy est bonne, votre modèle semble prédire correctement la qualité de l'air !"
+}else if (conf_matrix$overall[1]>0.50){
+  accuracytxt="Votre accuracy est moyenne, votre modèle semble ne predire que partiellement la qualité de l'air."
+}else{
+  accuracytxt="Votre accuracy est mauvaise, le modèle n'est pas bien adapté pour prédire la qualité de l'air."
+}
+
+#Sensitivité:
+if (conf_matrix$byClass[1]>0.9){
+  sensitxt="Votre sensibilité est très bonne, bravo vous predisez très bien les jours de bonne voire très bonne qualité de l'air (le groupe 1-2)"
+}else if (conf_matrix$byClass[1]>0.70){
+  sensitxt="Votre sensibilité est bonne, votre modèle semble prédire correctement les jours de bonne voire très bonne qualité de l'air  (le groupe 1-2)"
+}else if (conf_matrix$byClass[1]>0.50){
+  sensitxt="Votre sensibilité est moyenne, votre modèle semble ne predire que partiellement les jours de bonne voire très bonne qualité de l'air  (le groupe 1-2)."
+}else{
+  sensitxt="Votre sensibilité est mauvaise, le modèle n'est pas bien adapté pour prédire les jours de bonne voire très bonne qualité de l'air  (le groupe 1-2)."
+}
+
+
+# Spécificité:
+if (conf_matrix$byClass[2]>0.9){
+  specitxt="Votre spécificité est très bonne, bravo vous predisez très bien les jours où la qualité de l'air est degradé ou mauvaise, donc le groupe 3-4"
+}else if (conf_matrix$byClass[2]>0.70){
+  specitxt="Votre spécificité est bonne, votre modèle semble prédire correctement les jours où la qualité de l'air est degradé ou mauvaise, donc le groupe 3-4"
+}else if (conf_matrix$byClass[2]>0.50){
+  specitxt="Votre spécificité est moyenne, votre modèle semble ne predire que partiellement les jours où la qualité de l'air est degradé ou mauvaise, donc le groupe 3-4."
+}else{
+  specitxt="Votre spécificité est mauvaise, le modèle n'est pas bien adapté pour prédire les jours où la qualité de l'air est degradé ou mauvaise, donc le groupe 3-4."
+}
+
+
+
+phrase=paste("L'accuracy est de",round(conf_matrix$overall[1],3),", la sensibilité est de", round(conf_matrix$byClass[1],3),
+             ", et la spécificité est de", round(conf_matrix$byClass[2],3))
+
+fulltxtacc<- (paste("Votre accuracy = ",round(conf_matrix$overall[1],3),".", accuracytxt))
+fulltxtsensi<-(paste("Votre sensibilité (capacité à donner un résultat positif lorsqu'une hypothèse est vérifiée) =",
+            round(conf_matrix$byClass[1],3),".",sensitxt))
+fulltxtspeci<-(paste("Votre spécificité (capacité à donner un résultat négatif lorsqu'une hypothèse est vérifiée) =",
+            round(conf_matrix$byClass[2],3),".",specitxt))
+
+
 
 
 
