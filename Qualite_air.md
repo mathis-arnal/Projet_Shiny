@@ -18,7 +18,37 @@ editor_options:
 library("data.table")
 library("dplyr")
 library("car")
+```
+
+```
+## Warning: le package 'car' a été compilé avec la version R 4.1.3
+```
+
+```
+## Le chargement a nécessité le package : carData
+```
+
+```
+## Warning: le package 'carData' a été compilé avec la version R 4.1.2
+```
+
+```
+## 
+## Attachement du package : 'car'
+```
+
+```
+## L'objet suivant est masqué depuis 'package:dplyr':
+## 
+##     recode
+```
+
+```r
 library("FactoMineR")
+```
+
+```
+## Warning: le package 'FactoMineR' a été compilé avec la version R 4.1.3
 ```
 
 ## a) Présentation des données
@@ -79,20 +109,8 @@ météorologiques permettent d'expliquer l'indice ATMO.
 
 
 ```r
-df <- read.csv("C:/Users/renax/Desktop/ACO/S9/Programmation_R/Projet_meteo/Projet_Shiny/quality_index_rennes.csv", header=TRUE)
-```
+df <- read.csv("C:/Users/renax/Desktop/ACO/S9/Programmation_R/Projet_meteo/Projet_Shiny/data/quality_index_rennes.csv", header=TRUE)
 
-```
-## Warning in file(file, "rt"): cannot open file
-## 'C:/Users/renax/Desktop/ACO/S9/Programmation_R/Projet_meteo/Projet_Shiny/quality_index_rennes.csv': No such
-## file or directory
-```
-
-```
-## Error in file(file, "rt"): cannot open the connection
-```
-
-```r
 set.seed(45L)
 dt_qualite_air <- data.table(df) # transformation en datatable
 
@@ -100,7 +118,22 @@ summary(dt_qualite_air[,23:31]) # résumé pour les données meteo, pour verifie
 ```
 
 ```
-## Error in `[.data.table`(dt_qualite_air, , 23:31): Item 1 of j is 23 which is outside the column number range [1,ncol=1]
+##       tmin             tmax            prcp          snow              wdir      
+##  Min.   :-5.600   Min.   : 2.50   Min.   : 0.000   Mode:logical   Min.   :  0.0  
+##  1st Qu.: 4.600   1st Qu.:12.70   1st Qu.: 0.000   NA's:731       1st Qu.:113.0  
+##  Median : 8.600   Median :18.20   Median : 0.000                  Median :209.0  
+##  Mean   : 8.533   Mean   :18.26   Mean   : 1.718                  Mean   :193.8  
+##  3rd Qu.:12.500   3rd Qu.:23.50   3rd Qu.: 1.300                  3rd Qu.:270.0  
+##  Max.   :20.200   Max.   :40.50   Max.   :53.600                  Max.   :359.0  
+##                                   NA's   :3                       NA's   :2      
+##       wspd            wpgt            pres          tsun        
+##  Min.   : 3.10   Min.   :11.10   Min.   : 986.9   Mode:logical  
+##  1st Qu.: 9.30   1st Qu.:30.00   1st Qu.:1012.6   NA's:731      
+##  Median :12.10   Median :37.00   Median :1018.2                 
+##  Mean   :12.83   Mean   :38.91   Mean   :1018.0                 
+##  3rd Qu.:15.80   3rd Qu.:46.00   3rd Qu.:1023.4                 
+##  Max.   :36.00   Max.   :91.00   Max.   :1043.1                 
+##  NA's   :2       NA's   :14      NA's   :2
 ```
 
 La variable à expliquer est la colonne code_qual'. Il s'agit d'une
@@ -155,13 +188,7 @@ dans la nouvelle colonne *qualite_air_groupe:*
 # creation de la colonnes qualite_air_groupe
 dt_qualite_air[, qualite_air_groupe := ifelse(code_qual %in% c(1, 2), "Groupe 1-2",
                                    ifelse(code_qual %in% c(3, 4), "Groupe 3-4", "Other"))]
-```
 
-```
-## Error in eval(jsub, SDenv, parent.frame()): object 'code_qual' not found
-```
-
-```r
 dt_qualite_air$qualite_air_groupe<- as.factor(dt_qualite_air$qualite_air_groupe)
 ```
 
@@ -187,27 +214,11 @@ trigonométriques:
 # Convertir les degrés en radians
 dt_qualite_air <- dt_qualite_air %>%
   mutate(Angle_radians = wdir * pi / 180)
-```
 
-```
-## Error in `mutate()`:
-## ℹ In argument: `Angle_radians = wdir * pi/180`.
-## Caused by error:
-## ! object 'wdir' not found
-```
-
-```r
 # Calculer les composantes x et y de la direction du vent
 dt_qualite_air <- dt_qualite_air %>%
   mutate(Vent_x_est = cos(Angle_radians),
          Vent_y_nord = sin(Angle_radians))
-```
-
-```
-## Error in `mutate()`:
-## ℹ In argument: `Vent_x_est = cos(Angle_radians)`.
-## Caused by error:
-## ! object 'Angle_radians' not found
 ```
 
 Avant de créer notre premier modèle nous remarquons que parmis nos
@@ -230,9 +241,7 @@ varibles et aux individus.
 res<- PCA(dt_qualite_air[, c(22,23,24,25,28,29,30,32,34,35)],scale.unit = TRUE, quali.sup = 8)
 ```
 
-```
-## Error in `[.data.table`(dt_qualite_air, , c(22, 23, 24, 25, 28, 29, 30, : Item 1 of j is 22 which is outside the column number range [1,ncol=2]
-```
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png)![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-2.png)
 
 ```r
 # enlever wdir
@@ -241,9 +250,7 @@ res<- PCA(dt_qualite_air[, c(22,23,24,25,28,29,30,32,34,35)],scale.unit = TRUE, 
 plot(res, habillage = 8, label = "none")
 ```
 
-```
-## Error in eval(expr, envir, enclos): object 'res' not found
-```
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-3.png)
 
 On vois sur le graph des individus colorés par groupe de qualité de
 l'air que le groupe 1-2 se réparti le long des deux première dimension
@@ -273,28 +280,28 @@ print(resultat_anova)
 ```r
 # 1. Ajustez le modèle complet
 mod_complet <- glm(qualite_air_groupe ~ tavg + prcp + wspd + wpgt + pres + Vent_x_est + Vent_y_nord, data = dt_qualite_air, family = "binomial")
-```
 
-```
-## Error in eval(predvars, data, env): object 'tavg' not found
-```
-
-```r
 # 2. Ajustez le modèle 2 (sans la variable 'wpgt')
 mod_2 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + pres + Vent_x_est + Vent_y_nord, data = dt_qualite_air, family = "binomial")
-```
 
-```
-## Error in eval(predvars, data, env): object 'tavg' not found
-```
-
-```r
 # 3. Comparez les deux modèles en utilisant la fonction anova()
 anova(mod_complet, mod_2, test="F")
 ```
 
 ```
-## Error in eval(expr, envir, enclos): object 'mod_complet' not found
+## Warning: using F test with a 'binomial' family is inappropriate
+```
+
+```
+## Analysis of Deviance Table
+## 
+## Model 1: qualite_air_groupe ~ tavg + prcp + wspd + wpgt + pres + Vent_x_est + 
+##     Vent_y_nord
+## Model 2: qualite_air_groupe ~ tavg + prcp + wspd + pres + Vent_x_est + 
+##     Vent_y_nord
+##   Resid. Df Resid. Dev Df   Deviance      F Pr(>F)
+## 1       706     611.45                            
+## 2       707     611.46 -1 -0.0056465 0.0056 0.9401
 ```
 
 ```r
@@ -302,24 +309,56 @@ summary(mod_2)
 ```
 
 ```
-## Error in eval(expr, envir, enclos): object 'mod_2' not found
+## 
+## Call:
+## glm(formula = qualite_air_groupe ~ tavg + prcp + wspd + pres + 
+##     Vent_x_est + Vent_y_nord, family = "binomial", data = dt_qualite_air)
+## 
+## Deviance Residuals: 
+##      Min        1Q    Median        3Q       Max  
+## -1.86363  -0.69601  -0.39066  -0.06969   2.99968  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(>|z|)    
+## (Intercept) 11.67672   15.09417   0.774   0.4392    
+## tavg         0.03554    0.01646   2.159   0.0308 *  
+## prcp        -0.20390    0.07977  -2.556   0.0106 *  
+## wspd        -0.11917    0.02736  -4.355 1.33e-05 ***
+## pres        -0.01156    0.01465  -0.789   0.4302    
+## Vent_x_est   0.68605    0.14312   4.793 1.64e-06 ***
+## Vent_y_nord  1.23734    0.16293   7.594 3.10e-14 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 779.11  on 713  degrees of freedom
+## Residual deviance: 611.46  on 707  degrees of freedom
+## AIC: 625.46
+## 
+## Number of Fisher Scoring iterations: 6
 ```
 
 ```r
 ## On recommence avec un autre modèle où on enlève pres
 mod_3 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + Vent_x_est + Vent_y_nord, data = dt_qualite_air, family = "binomial")
-```
 
-```
-## Error in eval(predvars, data, env): object 'tavg' not found
-```
-
-```r
 anova(mod_2, mod_3, test="F")
 ```
 
 ```
-## Error in eval(expr, envir, enclos): object 'mod_2' not found
+## Warning: using F test with a 'binomial' family is inappropriate
+```
+
+```
+## Analysis of Deviance Table
+## 
+## Model 1: qualite_air_groupe ~ tavg + prcp + wspd + pres + Vent_x_est + 
+##     Vent_y_nord
+## Model 2: qualite_air_groupe ~ tavg + prcp + wspd + Vent_x_est + Vent_y_nord
+##   Resid. Df Resid. Dev Df Deviance      F Pr(>F)
+## 1       707     611.46                          
+## 2       708     612.08 -1 -0.62032 0.6203 0.4309
 ```
 
 ```r
@@ -328,7 +367,33 @@ summary(mod_3)
 ```
 
 ```
-## Error in eval(expr, envir, enclos): object 'mod_3' not found
+## 
+## Call:
+## glm(formula = qualite_air_groupe ~ tavg + prcp + wspd + Vent_x_est + 
+##     Vent_y_nord, family = "binomial", data = dt_qualite_air)
+## 
+## Deviance Residuals: 
+##      Min        1Q    Median        3Q       Max  
+## -1.79972  -0.70067  -0.39618  -0.07013   2.97974  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(>|z|)    
+## (Intercept) -0.22836    0.36276  -0.630   0.5290    
+## tavg         0.03991    0.01555   2.567   0.0103 *  
+## prcp        -0.18923    0.07629  -2.480   0.0131 *  
+## wspd        -0.11477    0.02678  -4.285 1.83e-05 ***
+## Vent_x_est   0.65935    0.13888   4.748 2.06e-06 ***
+## Vent_y_nord  1.22971    0.16244   7.570 3.73e-14 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 779.11  on 713  degrees of freedom
+## Residual deviance: 612.08  on 708  degrees of freedom
+## AIC: 624.08
+## 
+## Number of Fisher Scoring iterations: 6
 ```
 
 Tous les paramètres de notre modèles sont significatifs.
