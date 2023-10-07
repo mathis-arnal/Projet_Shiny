@@ -6,22 +6,8 @@ library(ggmap)
 library(leaflet)
 library(ggmap)
 # importation du jeu de donnes
-dataMeteo <- read.table("data/meteostat_data.csv",sep=",", header=TRUE)
-# importation du jeu de donnée de la qualité de l'air pour recuperer la colonne qui nous interesse
-datatemp<-read.csv("data/quality_index_rennes.csv")
-dataMeteo$qualite_air<-datatemp$code_qual # colonne récupérée
-rm(datatemp) # on supprime le jeu de données
+all_raw_data <- read_csv("data/all_raw_data.csv")
 
-# premiere carte "test" avec juste les pointeurs
-# m <- leaflet() %>%
-#   addTiles() %>%  # Add default OpenStreetMap map tiles
-#   addMarkers(lng = -1.6788, lat = 48.1123, popup = "Rennes") %>%
-#   addMarkers(lng = -4.4886, lat = 48.3917, popup = "Brest") %>%
-#   addMarkers(lng = -4.1035, lat = 47.9959, popup = "Quimper") %>%
-#   addMarkers(lng = -2.7617, lat = 48.5144, popup = "Saint- Brieuc") %>%
-#   addMarkers(lng = -2.7576, lat = 47.6572, popup = "Vannes") 
-# 
-# m
 ##################################################################################
 ######## WIND DIRECTION
 
@@ -30,9 +16,9 @@ rm(datatemp) # on supprime le jeu de données
 # rennes, brest, quimper, saint-brieuc, vannes
 date="2021-09-30"
 # recuperation
-VectwindDir= as.vector(dataMeteo[which(dataMeteo$time==date),7])
-VectwindDir
 
+VectwindDir= as.vector(all_raw_data[which(all_raw_data$time==date),grep("wdir", colnames(all_raw_data))])
+VectwindDir<-as.vector(VectwindDir$wdir)
 
 #####
 # a partir de la direction du vent en degr?, on va approximer la direction
@@ -59,13 +45,13 @@ get_wind_direction <- function(x){
   winddir="315NO"
 }else if (is.na(x)){
   winddir="NA"
-}}
+}
+  return(winddir)}
 
 # on applique la fonction a notre vecteur
 winddirall<- paste("WindIcon", sapply(VectwindDir, get_wind_direction), sep="")
 
 # on recupere l'icon correspondante pour chacune des villes
-
 WindRennes <- makeIcon(
   iconUrl = paste("Icons/", winddirall[1],".PNG",sep=""),
   iconWidth = 50, iconHeight = 60
@@ -109,10 +95,10 @@ m <- leaflet() %>%
   
   addMarkers(lng = -2.7576, lat = 47.6572, 
              icon = WindVannes,
-             popup = paste("Vannes: ",VectwindDir[5], "°")) 
+             popup = paste("Vannes: ",VectwindDir[[5]], "°")) 
 
 m
- 
+
 ##################################################################"
 ####################  PRECIPITATIONS  ###########"
 
@@ -126,13 +112,11 @@ m
 #   0%  66%  99% 
 #  0.0  1.3 25.4
 
-
-
 ####### creation des Icons pour le vent a partir d'un imagne internet
 date="2021-09-25"
 # recuperation
-Vectprcp= as.vector(dataMeteo[which(dataMeteo$time==date),5])
-Vectprcp
+Vectprcp= as.vector(all_raw_data[which(all_raw_data$time==date),grep("prcp", colnames(all_raw_data))])
+Vectprcp<-as.vector(Vectprcp$prcp)
 
 # creation d'une fonction classe la quantité de precipitation
 get_prcp <- function(x){
@@ -147,13 +131,13 @@ get_prcp <- function(x){
   }else if (x ==0){
     prcp="pas"
   }
+  return (prcp)
 }
 
 # on applique la fonction a notre vecteur
-temp=sapply(Vectprcp, get_prcp)
 prcpall<- paste(sapply(Vectprcp, get_prcp),"prcpIcon", sep="")
 
-
+# on recupere les incones pour chacune des villes
 prcpRennesIcon <- makeIcon(
   iconUrl = paste("Icons/",prcpall[1],".PNG",sep=""),
   iconWidth = 110, iconHeight = 100
@@ -174,8 +158,6 @@ prcpVannesIcon <- makeIcon(
   iconUrl =  paste("Icons/",prcpall[5],".PNG",sep=""),
   iconWidth = 110, iconHeight = 100
 )
-
-
 
 ### creations de la map
 m <- leaflet() %>%
@@ -203,9 +185,72 @@ m <- leaflet() %>%
 m
 ##################################################################################
 # QUALITE DE L'AIR'
-
-# rennes, brest, quimper, saint-brieuc, vannes
-# date="2021-09-25"
+####### creation des Icons pour le vent a partir d'un imagne internet
+date="2021-09-25"
 # recuperation
-# VectQualAir= as.vector(dataMeteo[which(dataMeteo$qual==date),13])
-# VectQualAir
+VectQualair= as.vector(all_raw_data[which(all_raw_data$time==date),grep("code_qual", colnames(all_raw_data))])
+VectQualair<-as.vector(VectQualair$code_qual)
+
+# creation d'une fonction classe la quantité de precipitation
+get_qualair <- function(x){
+  if (is.na(x)){
+    qualair="NA"} 
+  if (x==1){
+    qualair="Bon"}
+  if (x==2){
+    qualair="Moyen"} 
+  if (x==3){
+    qualair="Degrade"}
+  if (x==4){
+    qualair="Mauvais"}
+  return (qualair)}
+
+# on applique la fonction a notre vecteur
+qualairall<- paste(sapply(VectQualair, get_qualair),"_qualairIcon", sep="")
+
+
+qualairRennesIcon <- makeIcon(
+  iconUrl = paste("Icons/",qualairall[1],".jpg",sep=""),
+  iconWidth = 60, iconHeight = 40)
+
+qualairBrestIcon <- makeIcon(
+  iconUrl = paste("Icons/",qualairall[2],".jpg",sep=""),
+  iconWidth = 60, iconHeight = 40)
+
+qualairQuimperIcon <- makeIcon(
+  iconUrl = paste("Icons/",qualairall[3],".jpg",sep=""),
+  iconWidth = 60, iconHeight = 40)
+
+qualairSaintBrieucIcon <- makeIcon(
+  iconUrl =  paste("Icons/",qualairall[4],".jpg",sep=""),
+  iconWidth = 60, iconHeight = 40)
+
+qualairVannesIcon <- makeIcon(
+  iconUrl =  paste("Icons/",qualairall[5],".jpg",sep=""),
+  iconWidth = 60, iconHeight = 40)
+
+### creations de la map
+m <- leaflet() %>%
+  addTiles() %>%  # Add default OpenStreetMap map tiles
+  addMarkers(lng = -1.6788, lat = 48.1123, 
+             icon = qualairRennesIcon, 
+             popup = paste("Rennes: ",VectQualair[1])) %>%
+  
+  addMarkers(lng = -4.4886, lat = 48.3917,
+             icon = qualairBrestIcon,
+             popup = paste("Brest: ",VectQualair[2])) %>%
+  
+  addMarkers(lng = -4.1035, lat = 47.9959, 
+             icon = qualairQuimperIcon,
+             popup = paste("Quimper: ",VectQualair[3])) %>%
+  
+  addMarkers(lng = -2.7617, lat = 48.5144,
+             icon = qualairSaintBrieucIcon,
+             popup = paste("Saint-Brieuc: ",VectQualair[4])) %>%
+  
+  addMarkers(lng = -2.7576, lat = 47.6572, 
+             icon = qualairVannesIcon,
+             popup = paste("Vannes: ",Vectprcp[5], "mm")) 
+
+m
+
