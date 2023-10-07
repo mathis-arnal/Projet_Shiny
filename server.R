@@ -1,30 +1,3 @@
-<<<<<<< HEAD
-=======
-library(shiny)
-library(colourpicker)
-library(shinydashboard)
-library(knitr)
-library(fresh)
-library(shinyWidgets)
-library(shiny)
-library(colourpicker)
-library(shinydashboard)
-library(knitr)
-library(fresh)
-library(shinyWidgets)
-library(shiny)
-library(fresh)
-library(data.table)
-library(rmarkdown)
-library(fontawesome)
-library(ggmap)
-library(leaflet)
-library(dygraphs)
-library(xts)
-
-
-
->>>>>>> 4ee680ffb46c3a886db878cf7666ade5aa9aec6a
 shinyServer(function(input, output) {
   
   #Lien indice ATMO
