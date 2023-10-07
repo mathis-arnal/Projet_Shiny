@@ -131,28 +131,57 @@ datamodele.test <- datamodele[-train_indices, ]
 library("caret")
 
 # Model estimations
-fitControl.LGOCV <- trainControl(
-  method = "LGOCV",
-  number=10,
-  p=0.6
-)
+# fitControl.LGOCV <- trainControl(
+#   method = "LGOCV",
+#   number=10,
+#   p=0.6
+# )
 
-mod.glm.LGOCV <- train(
+mod.glm <- train(
   qualite_air_groupe ~ .,
   data=datamodele.train,
   method="glm",
-  trControl = fitControl.LGOCV
+  family="binomial"
+  #,  trControl = fitControl.LGOCV
 )
 
+mod.glm<-glm(qualite_air_groupe ~ .,
+             data=datamodele.train,
+             family="binomial")
+
 # pred.glm.grid <- predict(mod.glm.LGOCV,newdata=datamodele.test) # glm prediction
+# mod.glm$results
+#pred.glm <- predict(mod.glm, newdata = datamodele.test)
 
-mod.glm.LGOCV$results
 
-pred.glm <- predict(mod.glm.LGOCV)
+scores.glm <- predict(mod.glm, newdata = datamodele.test, type = "response")
+library(ROCR)
+
+# Créer un objet de performance ROC
+roc_obj <- prediction(scores.glm, datamodele.test$qualite_air_groupe)
+
+# Calculer les valeurs de la courbe ROC
+roc_values <- performance(roc_obj, "tpr", "fpr")
+
+# Tracer la courbe ROC
+plot(roc_values, main = "Courbe ROC")
+
+
+# Calculer les valeurs de la courbe ROC
+roc_values <- performance(roc_obj, "tpr", "fpr")
+
+pred=ifelse(scores.glm>0.2,"Groupe3_4","Groupe1_2")
+
+mean(pred==datamodele.test$qualite_air_groupe)
+
+#Matrice de confusion
+t(table(datamodele.test$qualite_air_groupe,pred))
+
+
 
 ###############
 # joli rendu:
-conf_matrix <- confusionMatrix(data = pred.glm, reference = datamodele.train$qualite_air_groupe)
+conf_matrix <- confusionMatrix(data = pred.glm, reference = datamodele.test$qualite_air_groupe)
 
 # un joli plot
 
