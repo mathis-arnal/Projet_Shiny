@@ -81,12 +81,26 @@ shinyUI(
                           fluidRow(
                             box(
                               title = "Notre objectif", width = 8, solidHeader = TRUE,
-                              "Le temps breton a un réputation connu, plus ou moins apprécié, il n'en reste pas 
-                              moins un sujet d'étude intéressant. Cette application permet de visualiser l'évolution des
-                              différents évènements météorologiques entre 2021 et 2023. De plus, une étude statistique 
-                              concernant l'indice de qualité* de l'air a permis de mettre en lumière les paramètres permettant
-                              d'expliquer au mieux cet indice.",
-                              br(), br(),
+                              "Apprécié, moqué ou envié, le temps breton est un phénomène intéressant à étudier. Cette application permet de visualiser l'évolution des différents
+                              évènements météorologiques en Bretagne entre 2021 et 2023.", br(), 
+                              "Nous avons sélectionné les données météorologiques de 5 villes bretonnes afin de simplifier le traitement des données.", br(), 
+                              "Un premier onglet « Carte interactive » vous donne la possibilité de sélectionner un phénomène (« pluie » ou « vent ») et de 
+                              visualiser son évolution dans le temps entre le 22/09/2021 et le 22/01/2023. L’interface permet s’arrêter à une date T ou bien de visualiser son 
+                              évolution de manière automatique.", br(), 
+                              "L’onglet « Données météo », permet de visualiser de manière quantitative les différents paramètres météorologiques pour une ville sélectionnée 
+                              ainsi que pour une période donnée. Il est aussi possible de comparer les villes entre elles. Enfin, les fichiers de données utilisés sont téléchargeables 
+                              pour que vous puissiez y avoir accès.", br(), 
+                              "L’onglet « Qualité de l’air », présente notre étude statistique concernant l'indice de qualité de l'air*. Elle a permis de mettre en lumière les 
+                              paramètres permettant d'expliquer au mieux cet indicateur. Vous pouvez aussi vous-même créer votre modèle en choisissant différents paramètres afin 
+                              d’essayer de prédire au mieux l’indicateur de qualité de l’air en Bretagne.", br(), 
+                              "Notre objectif était de permettre une visualisation simple et interactive des différents phénomènes météorologiques en Bretagne. 
+                              Ainsi qu’une analyse de ces données pour pouvoir expliquer l’indice de qualité de l’air observé en Bretagne dans 5 villes sélectionnées.", br(), 
+                              "Nos pistes d’améliorations sont :" , br(), 
+                              "-	Mettre à jour de manière automatique les données (actualisation tous les jours).", br(),
+                              "-	Améliorer et affiner la visualisation en sélectionnant un nombre de ville plus important.", br(),
+                              "-	Permettre à l’utilisateur de télécharger son analyse sous un Rmarkdown.", br(),
+                              "-	Améliorer notre modèle prédictif. ", br(), 
+                              "Ce projet, nous a beaucoup plus et nous espérons que l’utilisation de l’application vous plaira également.", br(), br(),
                               "Renée, Mathis et Lou", 
                               br(), br(), br(),
                               "*Pour plus d'information sur l'indice de qualité de l'air vous pouvez vous référez au lien suivant :",
@@ -103,12 +117,11 @@ shinyUI(
                             column(width = 10,
                             box(title = "Météo en bretagne du 22/09/2021 au 22/09/2023", leafletOutput("carte",
                                                                                 height = 500, width = 950), width = 12)), 
-                            column(width = 2, checkboxGroupInput(inputId = "idCheckGroupMap", label = "Que voulez-vous observer ?", selected = 3,
+                            column(width = 2, radioButtons(inputId = "idCheckGroupMap", label = "Que voulez-vous observer ?",
                                                                  choiceNames =
-                                                                   list(icon("cloud-rain"), icon("wind"),
-                                                                        icon("temperature-half"), "Indice ATMO"),
+                                                                 list(icon("cloud-rain"), icon("wind")),
                                                                  choiceValues =
-                                                                   list("Pluie", "Vent", "Températures", "ATMO"))), 
+                                                                 list("Pluie", "Vent"))), 
                             div(style = "position:relative; left:calc(25%);", sliderInput("Date",
                                                                                           "Date sélectionnée",
                                                                                           min = as.Date("2021-09-22","%Y-%m-%d"),
