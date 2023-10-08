@@ -55,115 +55,108 @@ shinyUI(
                        div(style = "position:relative; left:calc(25%);",downloadButton("downloadData","Télécharger"))))
                      
                      ),
-    dashboardBody(
-      
-      chooseSliderSkin("Flat"),
+    dashboardBody(chooseSliderSkin("Flat"),
       
       use_theme(mytheme),
-      
-      tags$head(tags$style(HTML('
-      .main-header .logo {
-        font-family: system-ui;
-        font-weight: bold;
-        font-size: 24px;
-      }
-    '),
-      tags$head(tags$style(type='text/css', 
-                           ".slider-animate-button { font-size: 20pt !important; }")))),
+      tags$head(tags$style(type='text/css',".slider-animate-button { font-size: 20pt !important; }")),
       
       # navbarPage
       navbarPage("Des bottes et un ciré ?", 
-                 
                  # premier onglet présentation
-                 tabItems(
-                   # First tab content
-                   tabItem("Projet", 
-                          fluidRow(
-                            box(
-                              title = "Notre objectif", width = 8, solidHeader = TRUE,
-                              "Le temps breton a un réputation connu, plus ou moins apprécié, il n'en reste pas 
-                              moins un sujet d'étude intéressant. Cette application permet de visualiser l'évolution des
+                             tabItems(
+                               # First tab content
+                               tabItem("Projet", 
+                                       fluidRow(
+                                         box(
+                                           title = "Notre objectif", width = 8, solidHeader = TRUE,
+                                           "Le temps breton a un réputation connu, plus ou moins apprécié, il n'en reste pasmoins un sujet d'étude intéressant. 
+                                           Cette application permet de visualiser l'évolution des
                               différents évènements météorologiques entre 2021 et 2023. De plus, une étude statistique 
                               concernant l'indice de qualité* de l'air a permis de mettre en lumière les paramètres permettant
                               d'expliquer au mieux cet indice.",
-                              br(), br(),
-                              "Renée, Mathis et Lou", 
-                              br(), br(), br(),
-                              "*Pour plus d'information sur l'indice de qualité de l'air vous pouvez vous référez au lien suivant :",
-                              uiOutput("lien")
-                        
-                            
-                              
-                            )
-                          )
-                 ),
-                 # deuxième onglet carte
-                  tabItem("Carte",
-                          fluidRow(
-                            column(width = 10,
-                            box(title = "Météo en bretagne du 22/09/2021 au 22/09/2023", leafletOutput("carte",
-                                                                                height = 500, width = 950), width = 12)), 
-                            column(width = 2, checkboxGroupInput(inputId = "idCheckGroupMap", label = "Que voulez-vous observer ?", selected = 3,
-                                                                 choiceNames =
-                                                                   list(icon("cloud-rain"), icon("wind"),
-                                                                        icon("temperature-half"), "Indice ATMO"),
-                                                                 choiceValues =
-                                                                   list("Pluie", "Vent", "Températures", "ATMO"))), 
-                            div(style = "position:relative; left:calc(25%);", sliderInput("Date",
-                                                                                          "Date sélectionnée",
-                                                                                          min = as.Date("2021-09-22","%Y-%m-%d"),
-                                                                                          max = as.Date("2023-09-22","%Y-%m-%d"),
-                                                                                          value = as.Date("2021-09-22"), 
-                                                                                          timeFormat="%Y-%m-%d", 
-                                                                                          width = "50%",
-                                                                                          animate = animationOptions(interval = 300,
-                                                                                                                     playButton = icon('play', "fa-2x"),
-                                                                                                                     pauseButton = icon('pause', "fa-2x"))))
-                                
-                                
+                               br(), br(),
+                                           "Renée, Mathis et Lou", 
+                                           br(), br(), br(),
+                                           "*Pour plus d'information sur l'indice de qualité de l'air vous pouvez vous référez au lien suivant :",
+                                           uiOutput("lien"))
+                                       )
+                               ),
+                               # deuxième onglet carte
+                               tabItem("Carte",
+                                       fluidRow(
+                                         column(width = 10,
+                                                box(title = "Météo en bretagne du 22/09/2021 au 22/09/2023", leafletOutput("carte",
+                                                                                                                           height = 500, width = 950), width = 12)), 
+                                         column(width = 2, checkboxGroupInput(inputId = "idCheckGroupMap", label = "Que voulez-vous observer ?", selected = 3,
+                                                                              choiceNames =
+                                                                                list(icon("cloud-rain"), icon("wind"),
+                                                                                     icon("temperature-half"), "Indice ATMO"),
+                                                                              choiceValues =
+                                                                                list("Pluie", "Vent", "Températures", "ATMO"))), 
+                                         div(style = "position:relative; left:calc(25%);", sliderInput("Date",
+                                                                                                       "Date sélectionnée",
+                                                                                                       min = as.Date("2021-09-22","%Y-%m-%d"),
+                                                                                                       max = as.Date("2023-09-22","%Y-%m-%d"),
+                                                                                                       value = as.Date("2021-09-22"), 
+                                                                                                       timeFormat="%Y-%m-%d", 
+                                                                                                       width = "50%",
+                                                                                                       animate = animationOptions(interval = 300,
+                                                                                                                                  playButton = icon('play', "fa-2x"),
+                                                                                                                                  pauseButton = icon('pause', "fa-2x"))))
                                          
-                                        )
-                          
-                          
-                 ),
-                 
-                 # troisième onglet "Données météo"
-                  tabItem("Météo", 
-                          "Ici, vous pouvez observer les données météo de la ville qui vous intéresse sur une période souhaitée
+                                         
+                                         
+                                       )
+                                       
+                                       
+                               ),
+                               
+                               # troisième onglet "Données météo"
+                               tabItem("Météo", 
+                                       "Ici, vous pouvez observer les données météo de la ville qui vous intéresse sur une période souhaitée
                           (entre le 22/09/2021 et 22/09/2023), une fois que vous avez sélectionner vos 
                           paramètres, cliquez sur -Afficher les graphiques-." ,
-                          fluidRow(
-                            box(title = "La température ...", dygraphOutput("plotRainTemp")
-                          ),
-                          box(title = "La pluie ... ",dygraphOutput("plotPres")
-                          ),
-                          box(title = "Titre graph évolution du vent", "Box content", plotOutput("plotWind")
-                          ),
-                          box(title = "Évolution de l'indice de qualité de l'air", "Box content", plotOutput("plotAir")
-                          )
-                          )),
-                 
-                 # troisème onglet "Qualité de l'air"
-                 tabItem(
-                   "Rapport", 
-                   navbarPage( "" ,
-                              tabPanel("Notre rapport", "Ici nous allons afficher une analyse statistique des données permettant d'expliquer la varible qualité de l'air.",
-                          uiOutput("rapport"),
-                         includeMarkdown("Qualite_air.md")),
-                              tabPanel("A vous de jouer !", "ici on peut faire notre modèle",###meme que indice qualité air
-                                       checkboxGroupInput(inputId = "idCheckGroup", label = "Étape 1 : Quelles variables souhaitez vous sélectionner pour votre modèle ?", selected = 3,
-                                                          choices = c("tempréature moyenne" = 1, "température minimale" = 2, "température maximale" = 3, "précipitations quotidienne" = 4, "direction moyenne du vent"= 5, 
-                                                                      "vitesse moyenne du vent"= 6, "rafale de vent maximale" = 7, "pression au niveau de la mer" = 8,
-                                                                      "total d'ensoleillement quotidien" = 9)),
-                                       dateRangeInput(inputId = "idDateRange2", label = "Sélectionner la période sur laquelle vous voulez entraîner votre modèle : ",
-                                                      start = "2021-09-22", end = "2023-09-22", format = "yyyy-mm-dd",
-                                                      language = "fr", separator = " to "),
-                                       box(title = "Votre analyse", width = 8, solidHeader = TRUE,
-                                           verbatimTextOutput(outputId = "modelsumr")) 
-                                       )
-                 ))
-      )
-    )
-    )))
+                                       fluidRow(
+                                         box(title = "La température ...", dygraphOutput("plotRainTemp")
+                                         ),
+                                         box(title = "La pluie ... ",dygraphOutput("plotPres")
+                                         ),
+                                         box(title = "Titre graph évolution du vent", "Box content", plotOutput("plotWind")
+                                         ),
+                                         box(title = "Évolution de l'indice de qualité de l'air", "Box content", plotOutput("plotAir")
+                                         )
+                                       )),
+                               
+                               # troisème onglet "Qualité de l'air"
+                               tabItem(
+                                 "Rapport", 
+                                 navbarPage( "" ,
+                                             tabPanel("Notre rapport", "Ici nous allons afficher une analyse statistique des données permettant d'expliquer la varible qualité de l'air.",
+                                                      uiOutput("rapport"),
+                                                      includeMarkdown("Qualite_air.md")),
+                                             tabPanel("A vous de jouer !", "Sélectionner les paramètres que vous voulez prendre en compte dans votre modèle expliquant 
+                                       l'indice ATMO :",
+                                                      checkboxInput(inputId = "prcp", label = "précipitations quotidienne"),
+                                                      checkboxInput(inputId = "wdir", label = "direction moyenne du vent"),
+                                                      checkboxInput(inputId = "tavg", label = "température moyenne"),
+                                                      checkboxInput(inputId = "tmin", label = "température minimale"),
+                                                      checkboxInput(inputId = "tmax", label = "température maximale"),
+                                                      checkboxInput(inputId = "wspd", label = "vitesse moyenne du vent"),
+                                                      checkboxInput(inputId = "pres", label = "pression"),
+                                                      checkboxInput(inputId = "wpgt", label = "raffale maximale"),
+                                                      checkboxInput(inputId = "lag1", label = "lag 1"),
+                                                      checkboxInput(inputId = "lag2", label = "lag 2"),
+                                                      checkboxInput(inputId = "lag3", label = "lag 3"),
+                                                      ##Bouton poour lancer l'analyse 
+                                                      div(style = "position:relative; left:calc(15%);", 
+                                                          actionButton( "allez", "Lancer mon analyse")),
+                                                      br(),
+                                                      box(title = "Votre analyse", width = 12, solidHeader = TRUE,
+                                                          verbatimTextOutput("modele"), plotOutput("CM")
+                                                      ) 
+                                             )
+                                 ))
+                             )
+                  )
+  )))
 
-  
