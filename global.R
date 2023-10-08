@@ -16,6 +16,9 @@ library(ggmap)
 library(xts)
 library(caret)
 library(dplyr)
+library(car)
+library(FactoMineR)
+
 
 ## ouverture de nos jeux de données 
 

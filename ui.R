@@ -55,9 +55,7 @@ shinyUI(
                        div(style = "position:relative; left:calc(25%);",downloadButton("downloadData","Télécharger"))))
                      
                      ),
-    dashboardBody(
-      
-      chooseSliderSkin("Flat"),
+    dashboardBody(chooseSliderSkin("Flat"),
       
       use_theme(mytheme),
       
@@ -73,7 +71,6 @@ shinyUI(
       
       # navbarPage
       navbarPage("Des bottes et un ciré ?", 
-                 
                  # premier onglet présentation
                  tabItems(
                    # First tab content
@@ -189,4 +186,5 @@ shinyUI(
     )
     )))
 
-  
+
+
