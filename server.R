@@ -1,5 +1,7 @@
 shinyServer(function(input, output) {
   
+
+  
   #Lien indice ATMO
   output$lien <- renderUI({
     url <- a("Indice ATMO", href="https://www.atmo-france.org/article/lindice-atmo")
@@ -10,7 +12,7 @@ shinyServer(function(input, output) {
   datasetInput <- reactive({
     switch(input$dataset,
            "Données météo" = meteostat_data,##données météo
-           "Données indice qualité de l'air" = air_quality,##données qualité de l'air
+           "Données indice qualité de l'air" = air_quality##données qualité de l'air
     )
   })
   # Downloadable csv of selected dataset ----
@@ -52,6 +54,7 @@ shinyServer(function(input, output) {
     # 0 will be coerced to FALSE
     # 1+ will be coerced to TRUE
     v$doPlot <- input$go
+    print(input$go) # Add this line for debugging
   })
   
   # si on modifie le paramètre ville, les dates alors doPlot 
@@ -59,7 +62,9 @@ shinyServer(function(input, output) {
   # les graphiques actualisés
   observeEvent(input$ville, {
     v$doPlot <- FALSE
+    print(input$ville)
   })
+  
   
   observeEvent(input$idDateRange, {
     v$doPlot <- FALSE
@@ -73,6 +78,7 @@ shinyServer(function(input, output) {
     # 1+ will be coerced to TRUE
     r$doAnalyse <- input$allez
   })
+  
   
   observeEvent(input$prcp, {
     r$doAnalyse <- FALSE
@@ -99,43 +105,109 @@ shinyServer(function(input, output) {
   })
   # Affichage du graphique représentant l'évolution des températures
   output$plotRainTemp <- renderDygraph({
-    if (v$doPlot == FALSE) {return()
+    if (v$doPlot == FALSE)  {print('Choisissez une période et une ville...')
     } else {
-      if (input$go==T){# tant que l'utilisateur n'a pas validé ses paramètres aucun graphique ne s'affiche
-        date_start <- input$idDateRange[1]#affiche  la date de départ sous la forme [1] "2020-01-01"
-        date_end <- input$idDateRange[2]#affiche  la date de départ sous la forme [1] "2023-09-04"
-        Temp<-cbind(meteostat_data$tavg,meteostat_data$tmax,meteostat_data$tmin)
-        Temp_series <- xts(x = Temp, order.by = meteostat_data$time)
+# tant que l'utilisateur n'a pas validé ses paramètres aucun graphique ne s'affiche
+        
+        raw_data_spec <- raw_data[Localisation == input$ville]
+        Temp<-cbind(raw_data_spec$tavg,raw_data_spec$tmax,raw_data_spec$tmin)
+        Temp_series <- xts(x = Temp, order.by = time_range)
+        
         colnames(Temp_series) <- c("tavg", "tmax", "tmin")
-        dygraph(Temp_series, main = "Suivi des  températures")
-      } else {
-        plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'air", xlab="Évolution dans le temps")
-      }}
-    
+        
+        dygraph(Temp_series, main = "Temperature (°C)",
+                ylab = "Température") %>%
+          dySeries(c("tmin", "tavg", "tmax"), label = "Temp (°C)") %>%
+          dyRangeSelector(input$idDateRange) %>%
+          dyOptions(axisLabelFontSize = 12) %>%
+          dyLegend(show = "follow") %>%
+          dyCrosshair(direction = "vertical")
+      }
   })
   
-  # Affichage du graphique représentant l'évolution de la pression
+  output$selected_ville <- renderText({
+    if (v$doPlot == FALSE) {print('...')
+    } else {  # Check if input$go is TRUE
+        paste("You selected:", input$ville)
+      }
+    })
+  
+  # Affichage du graphique représentant l'évolution de la precipitation
+  
   output$plotPres <- renderDygraph({
-    if (input$go==T){
-      precipitation<-xts(x=meteostat_data$prcp,order.by = meteostat_data$time)
+    if (v$doPlot == FALSE) {print('Choisissez une période et une ville...')
+    } else {
+      raw_data_spec <- raw_data[Localisation == input$ville]
+      precipitation<-xts(x=raw_data_spec$prcp,order.by =time_range)
       colnames(precipitation)<-"precipitation(mm)"
       dygraph(precipitation, main = "Suivi des précipitations")%>%
-        dySeries("precipitation(mm)",stepPlot = TRUE, fillGraph = TRUE, color = "blue")
-    } else {## mettre un graph par défaut
-      plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'air", xlab="Évolution dans le temps")
+        dyRangeSelector(input$idDateRange) %>%
+        dyOptions(axisLabelFontSize = 12) %>%
+        dyLegend(show = "follow") %>%
+        dyCrosshair(direction = "vertical") %>%
+      dySeries("precipitation(mm)",stepPlot = TRUE, fillGraph = TRUE, color = "blue")
     }
   })
   
   # Affichage du graphique représentant l'évolution du vent
-  output$plotWind <- renderPlot({
-    if (input$go==T){
-      plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de ventT", xlab="Évolution dans le temps")
+  output$plotWind <- renderDygraph({
+    if (v$doPlot == FALSE) {print('Choisissez une période et une ville...')
     } else {
-      plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'air", xlab="Évolution dans le temps")
+      raw_data_spec <- raw_data[Localisation == input$ville]
+      Wind<-cbind(raw_data_spec$wspd,raw_data_spec$wpgt)
+      wind_series <- xts(x = Wind, order.by = time_range)
+      colnames(wind_series) <- c("wspd","wpgt")
+      dygraph(wind_series, main = "Vitesse du Vent",
+              ylab = "km/h") %>%
+        dySeries("wspd", label = "Wind Speed") %>%
+        dySeries("wpgt", label = "Pic de Rafale") %>%
+        dyRangeSelector(input$idDateRange) %>%
+        dyLegend(show = "follow")
     }
-    #mettre lignes de codes pour créer le graphique
-    #plot() 
   })
+  
+  output$plotAir <- renderDygraph({
+    if (!v$doPlot) {
+      print('Choisissez une période et une ville...')
+    } else {
+      raw_data_spec <- raw_data[Localisation == input$ville]
+      air_series <- xts(x = raw_data_spec$code_qual, order.by = time_range)
+      colnames(air_series) <- "Code_Qualite"
+      dygraph(air_series, main = "Qualité de l'air") %>%
+        dyRangeSelector(input$idDateRange) %>%
+        dySeries("Code_Qualite", stepPlot = TRUE, fillGraph = TRUE, color = "green") %>%
+        dyLegend(show = "follow")
+    }
+  })
+  
+  
+  library(shiny)
+  library(dygraphs)
+  
+  output$compPres <- renderDygraph({
+    if (!v$doPlot) {
+      print('Choisissez une période et une ville...')
+    } else {
+      choix_ville <- c("Rennes", "Saint-Brieuc")
+      prec_data <- cbind(raw_data[Localisation == choix_ville[1]]$prcp,
+                         raw_data[Localisation == choix_ville[2]]$prcp)
+      #precipitation_1 <- xts(x = raw_data[Localisation == choix_ville[1]]$prcp,
+      #                       order.by = time_range)
+      #precipitation_2 <- xts(x = raw_data[Localisation == choix_ville[2]]$prcp,
+      #                      order.by = time_range)
+      prec_ts <- xts(x = prec_data,
+                      order.by = time_range)
+      colnames(prec_ts)<- choix_ville
+      dygraph(prec_ts, main = "Comparaison_Precipitation_Ville") %>%
+        dyRangeSelector() %>%
+        dySeries(choix_ville[1], label = paste("prec_",choix_ville[1]),
+        color="blue", strokePattern = "dashed" ) %>%
+        dySeries(choix_ville[2], label = paste("prec_",choix_ville[2]),
+                 color="red") %>%
+        dyRangeSelector()
+    }
+  })
+  
   
   # Création du modèle par l'utilisateur et affichage de la matrice de confusion
   output$modele <- renderPrint({

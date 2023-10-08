@@ -40,19 +40,25 @@ shinyUI(
                                                                              "Quimper"
                                                                            ),
                                                                            choiceValues = list(
-                                                                             "text", "text", "text", "text", "text"
+                                                                             "Rennes", "Saint-Brieuc", "Vannes", "Brest", "Quimper"
                                                                            )),
                                                               dateRangeInput(inputId = "idDateRange", label = "Sélectionner la période qui vous intéresse : ",
-                                                                             start = "2020-01-01", end = "2023-09-22", format = "yyyy-mm-dd",
+                                                                             start = "2021-09-22", end = "2023-09-22",
+                                                                             min = "2021-09-22",max = "2023-09-22",
+                                                                             format = "yyyy-mm-dd",
                                                                              language = "fr", separator = " to "),
                                                               checkboxInput(inputId = "idCheckair", label = "Indice de qualité de l'air"),
                                                               ##Bouton poour lancer l'analyse 
-                                                              div(style = "position:relative; left:calc(15%);", actionButton( "go", "Afficher les graphiques")),
+                                                              div(style = "position:relative; left:calc(15%);", actionButton( "go", "Afficher les graphiques", reset = FALSE)),
                                                               selectInput("dataset", "Choisissez le jeu de données que vous souhaitez télécharger :",
                                                                           choices = c("Données météo", "Données indice qualité de l'air")),
                                                               
                                                               # Bouton
-                                                              div(style = "position:relative; left:calc(25%);",downloadButton("downloadData","Télécharger"))))
+                                                              div(style = "position:relative; left:calc(25%);",downloadButton("downloadData","Télécharger")))
+                                             
+                                             
+                                             
+                                             )
                                  
                 ),
                 dashboardBody(
@@ -128,20 +134,44 @@ shinyUI(
                                ),
                                
                                # troisième onglet "Données météo"
-                               tabItem("Météo", 
+                               tabItem("Météo",
+                                       navbarPage( "" ,
+                                       
+                                       # Donnees par ville
+                                       tabPanel(
+                                       "Météo par ville",
+                                       value ="Ville", 
                                        "Ici, vous pouvez observer les données météo de la ville qui vous intéresse sur une période souhaitée
                           (entre le 22/09/2021 et 22/09/2023), une fois que vous avez sélectionner vos 
                           paramètres, cliquez sur -Afficher les graphiques-." ,
                                        fluidRow(
+                                         box(title = "La ville ...", textOutput("selected_ville")
+                                         ),
                                          box(title = "La température ...", dygraphOutput("plotRainTemp")
                                          ),
                                          box(title = "La pluie ... ",dygraphOutput("plotPres")
                                          ),
-                                         box(title = "Titre graph évolution du vent", "Box content", plotOutput("plotWind")
+                                         box(title = " Évolution du vent", dygraphOutput("plotWind")
                                          ),
-                                         box(title = "Évolution de l'indice de qualité de l'air", "Box content", plotOutput("plotAir")
+                                         box(title = "Évolution de l'indice de qualité de l'air", dygraphOutput("plotAir")
                                          )
                                        )),
+                                       
+                                       tabPanel(
+                                         "Comparaison de villes",
+                                         value= "Comparaison",
+                                         
+                                         fluidRow(
+                                           box(title = "La température ...", dygraphOutput("compRainTemp")
+                                           ),
+                                           box(title = "La pluie ... ",dygraphOutput("compPres")
+                                           ),
+                                           box(title = " Évolution du vent", dygraphOutput("compWind")
+                                           ),
+                                           box(title = "Évolution de l'indice de qualité de l'air", dygraphOutput("compAir")
+                                           )
+                                         )
+                                       ))),
                                
                                # troisème onglet "Qualité de l'air"
                                tabItem(
