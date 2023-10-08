@@ -64,7 +64,7 @@ réglementés](https://www.atmo-france.org/article/air-exterieur "Air extérieur
 
 -   *Le dioxyde de soufre (SO~2~)."* - Site Atmo-france.org
 
-![](images/tableau.JPG){width="539"}
+![](images/table1.png)
 
 [Table 1:]{.underline} tableau des seuil de calcul des indices ATMO pour
 les 5 polluants indicateurs de la pollution - source: Site
@@ -78,12 +78,12 @@ météorologiques permettent d'expliquer l'indice ATMO.
 
 ```{r}
 
-df <- read.csv("C:/Users/renax/Desktop/ACO/S9/Programmation_R/Projet_meteo/Projet_Shiny/quality_index_rennes.csv", header=TRUE)
+df <- read.csv("C:/Users/renax/Desktop/ACO/S9/Programmation_R/Projet_meteo/Projet_Shiny/data/quality_index_rennes.csv", header=TRUE)
 
 set.seed(45L)
 dt_qualite_air <- data.table(df) # transformation en datatable
 
-summary(dt_qualite_air[,23:31]) # résumé pour les données meteo, pour verifier les classes des colonnes
+# summary(dt_qualite_air[,23:31]) # résumé pour les données meteo, pour verifier les classes des colonnes
 ```
 
 La variable à expliquer est la colonne code_qual'. Il s'agit d'une
@@ -174,6 +174,34 @@ moyenne est instrinsèquement liée à la température minimale et la
 température maximale. Ainsi, par principe de parcimonie nous ne gardons
 que la température moyenne sur les 3 variables de température.
 
+Nous créons en plus, des données de lag qui permettent de prendre en
+compte les 3 jours précédents le jours à prévoir:
+
+```{r}
+datameteo<-dt_qualite_air[,c(22:25,28:30,34,35)]
+donnees_lagues1 <- datameteo %>%
+  mutate_all(~lag(.))
+colnames(donnees_lagues1) <- c("tavg_lag1","tmin_lag1","tmax_lag1","prcp_lag1", "wspd_lag1","wppgt_lag1", "pres_lag1", "vent_x_lag1","vent_y_lag1")             
+
+donnees_lagues2 <- donnees_lagues1 %>%
+  mutate_all(~lag(.))
+colnames(donnees_lagues2) <- c("tavg_lag2","tmin_lag2","tmax_lag2","prcp_lag2", "wspd_lag2","wppgt_lag2", "pres_lag2", "vent_x_lag2","vent_y_lag2")              
+
+
+donnees_lagues3 <- donnees_lagues2 %>%
+  mutate_all(~lag(.))
+colnames(donnees_lagues3) <- c("tavg_lag3","tmin_lag3","tmax_lag3","prcp_lag3", "wspd_lag3","wppgt_lag3", "pres_lag3", "vent_x_lag3","vent_y_lag3")             
+
+
+# on juxtapose ces dataframe au tableau initial:
+dt_qualite_air <- cbind(dt_qualite_air, donnees_lagues1)
+dt_qualite_air <- cbind(dt_qualite_air, donnees_lagues2)
+dt_qualite_air <- cbind(dt_qualite_air, donnees_lagues3)
+
+# on enlève les 3 premières lignes car elles contiennent des NA:
+dt_qualite_air <- dt_qualite_air[-c(1:3),]
+```
+
 ## d) Visualisation des données en anayse factorielle
 
 Afin d'avoir une vue d'esmble des variables explicatives et de la
@@ -184,7 +212,8 @@ varibles et aux individus.
 
 ```{r}
 # Selection des colonnes qui nous interesse i.e les variables explicatives et la variable réponse
-res<- PCA(dt_qualite_air[, c(22,23,24,25,28,29,30,32,34,35)],scale.unit = TRUE, quali.sup = 8)
+
+res<- PCA(dt_qualite_air[, c(22:25,28:30,32,34:62)],scale.unit = TRUE, quali.sup = 8)
 # enlever wdir
 
 # Afficher le graphique PCA
@@ -195,10 +224,11 @@ plot(res, habillage = 8, label = "none")
 On vois sur le graph des individus colorés par groupe de qualité de
 l'air que le groupe 1-2 se réparti le long des deux première dimension
 de manière assez homogène. Les individus des groupes 3-4 sont legèrement
-plus vers la gauche du graphique, et se répartisse de manière homogène
-le long de la deuxième dimension. On retouve cela avec le barycentre des
-groupes 1-2 et 3-4 qui sont environ aux meme coordonées sur la deuxième
-dimension mais qui sont un peu différents sur la première
+plus vers le haut du graphique et les individus du groupe 1-2 plutot
+vers le bas, mais les deux groupes et se répartisse de manière homogène
+le long de la première dimension. On retouve cela avec le barycentre des
+groupes 1-2 et 3-4 qui sont environ aux meme coordonées sur la première
+dimension mais qui sont un peu séparés sur la deuxième.
 
 On peut donc supposer que les variables contribuant le plus à la
 première dimension pourraient nous donner des informations sur la
@@ -209,19 +239,16 @@ deux groupes d'individus.
 
 Nous faisons dans un premier temps un modèle logistique complet avec
 l'ensemble des variables explicatives, et nous cherchons un modèle final
-par le biais d'une selection de modèle par élimination descendante avec
-un critère de test de rapport de vraissemblance (Likelihood Ratio Test).
-
-ichez les résultats de l'ANOVA
-
-print(resultat_anova)
+par grace au critère d'AIC.
 
 ```{r}
-# 1. Ajustez le modèle complet
-mod_complet <- glm(qualite_air_groupe ~ tavg + prcp + wspd + wpgt + pres + Vent_x_est + Vent_y_nord, data = dt_qualite_air, family = "binomial")
+datamod=dt_qualite_air[, c(22:25,28:30,32,34:62)]
+# 1. Ajustement du modèle complet
+mod_complet <- glm(qualite_air_groupe ~ ., data = datamod, family = "binomial")
+summary(mod_complet)
 
-# 2. Ajustez le modèle 2 (sans la variable 'wpgt')
-mod_2 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + pres + Vent_x_est + Vent_y_nord, data = dt_qualite_air, family = "binomial")
+# 2. Ajusteement le modèle 2 (sans la variable 'tminlag1')
+mod_2 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + pres + Vent_x_est + Vent_y_nord, data = datamod, family = "binomial")
 
 # 3. Comparez les deux modèles en utilisant la fonction anova()
 anova(mod_complet, mod_2, test="F")
@@ -229,7 +256,7 @@ anova(mod_complet, mod_2, test="F")
 summary(mod_2)
 
 ## On recommence avec un autre modèle où on enlève pres
-mod_3 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + Vent_x_est + Vent_y_nord, data = dt_qualite_air, family = "binomial")
+mod_3 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + Vent_x_est + Vent_y_nord, data = datamod, family = "binomial")
 
 anova(mod_2, mod_3, test="F")
 
