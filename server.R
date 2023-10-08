@@ -13,7 +13,7 @@ shinyServer(function(input, output) {
            "Données indice qualité de l'air" = air_quality,##données qualité de l'air
     )
   })
-  # Downloadable csv of selected dataset ----
+  # Téléchargement dataset
   output$downloadData <- downloadHandler(
     filename = function() {
       paste(input$dataset, ".csv", sep = ",")
@@ -23,20 +23,17 @@ shinyServer(function(input, output) {
       write.csv(datasetInput(), file)
     }
   )
-  
-  #Téléchargement du fichier Rmd 
-  output$rapport <- renderUI({
-      url <- a("Rapport", href = "file:///C:/Users/buiss/OneDrive/M2%20S9-S10/PROJET/Projet_Shiny/scripts/Qualite_air.html")
-      tagList(url)
-    })
 
+  ## CARTE INTERACTIVE
+  ##################################################################################
+  output$map <- renderLeaflet({
+    ### creations de la map
+      m<- leaflet() %>%
+          addTiles()  # Ajoute noms par défaut de la carte
 
-  # Affichage de la carte
-  output$carte <- renderLeaflet({
-    date = input$Date
-    cond = input$map
-    ## CARTE INTERACTIVE
-    ##################################################################################
+    date <- input$Date
+    cond <- input$map
+    
     ######## WIND DIRECTION
     
     # recuperation de l'orientation du vent pour chaque ville pour une date donnée:
@@ -48,13 +45,12 @@ shinyServer(function(input, output) {
         # recuperation
       VectwindDir= as.vector(all_raw_data[which(all_raw_data$time==date),grep("wdir", colnames(all_raw_data))])
       # VectwindDir<-as.vector(VectwindDir$wdir)
-
-      #####
+      
       # a partir de la direction du vent en degre, on va approximer la direction
       # a un des huit point carnidaux le plus proche. Si l'angle est de 5 on approxime
       # a 0 et on dit que la direction générale est Nord
 
-      # creation d'une fonction qui va recuperer les coordonners les plus proches
+      # creation d'une fonction qui va recuperer les coordonnees les plus proches
       get_wind_direction <- function(x){
         if (x >=337.5 ||x < 22.5){
           winddir="0N"
@@ -103,9 +99,8 @@ shinyServer(function(input, output) {
       )
 
 
-      ### creations de la map
-      m <- leaflet() %>%
-        addTiles() %>%  # Add default OpenStreetMap map tiles
+      ### creation de la map
+      m %>%
         addMarkers(lng = -1.6788, lat = 48.1123,
                    icon = WindRennes,
                    popup = paste( "Rennes: ",VectwindDir[1], "°")) %>%
@@ -125,13 +120,12 @@ shinyServer(function(input, output) {
         addMarkers(lng = -2.7576, lat = 47.6572,
                    icon = WindVannes,
                    popup = paste("Vannes: ",VectwindDir[[5]], "°"))
-
-      m}
-
+    }
+    
+    ######## RAIN
     else if(cond == "Pluie"){
       Vectprcp= as.vector(all_raw_data[which(all_raw_data$time==date),grep("prcp", colnames(all_raw_data))])
       # Vectprcp<-as.vector(Vectprcp$prcp)
-
       # creation d'une fonction classe la quantité de precipitation
       get_prcp <- function(x){
         if (is.na(x)){
@@ -173,9 +167,8 @@ shinyServer(function(input, output) {
         iconWidth = 110, iconHeight = 100
       )
 
-      ### creations de la map
-      m <- leaflet() %>%
-        addTiles() %>%  # Add default OpenStreetMap map tiles
+      ### creation de la map
+      m %>%
         addMarkers(lng = -1.6788, lat = 48.1123,
                    icon = prcpRennesIcon,
                    popup = paste("Rennes: ",Vectprcp[1], "mm")) %>%
@@ -195,11 +188,10 @@ shinyServer(function(input, output) {
         addMarkers(lng = -2.7576, lat = 47.6572,
                    icon = prcpVannesIcon,
                    popup = paste("Vannes: ",Vectprcp[5], "mm"))
-
-      m
     }
-
-    else if (cond == "ATMO"){
+    
+    ######## INDICE ATMO
+     else if (cond == "ATMO"){
       VectQualair= as.vector(all_raw_data[which(all_raw_data$time==date),grep("code_qual", colnames(all_raw_data))])
       # VectQualair<-as.vector(VectQualair$code_qual)
 
@@ -241,9 +233,8 @@ shinyServer(function(input, output) {
         iconUrl =  paste("Icons/",qualairall[5],".jpg",sep=""),
         iconWidth = 60, iconHeight = 40)
 
-      ### creations de la map
-      m <- leaflet() %>%
-        addTiles() %>%  # Add default OpenStreetMap map tiles
+      ### creation de la map
+       m %>%
         addMarkers(lng = -1.6788, lat = 48.1123,
                    icon = qualairRennesIcon,
                    popup = paste("Rennes: ",VectQualair[1])) %>%
@@ -263,12 +254,9 @@ shinyServer(function(input, output) {
         addMarkers(lng = -2.7576, lat = 47.6572,
                    icon = qualairVannesIcon,
                    popup = paste("Vannes: ",Vectprcp[5], "mm"))
-
-      m
-    }
-
-      
+      }
   })
+    
   
   # l'objet v permet de maîtriser l'affichage des graphiques
   v <- reactiveValues(doPlot = FALSE)
@@ -282,7 +270,7 @@ shinyServer(function(input, output) {
     v$doPlot <- input$go
   })
   
-  # si on modifie le paramètre ville, les dates alors doPlot 
+  # si on modifie le paramètre ville et les dates alors doPlot 
   # prend la valeur FALSE, il faut dont re-cliquer pour afficher 
   # les graphiques actualisés
   observeEvent(input$ville, {
@@ -297,8 +285,6 @@ shinyServer(function(input, output) {
   r <- reactiveValues(doAnalyse = FALSE)
   
   observeEvent(input$allez, {
-    # 0 will be coerced to FALSE
-    # 1+ will be coerced to TRUE
     r$doAnalyse <- input$allez
   })
   
@@ -336,17 +322,6 @@ shinyServer(function(input, output) {
     r$doAnalyse <- FALSE
   })
   
-  
-  # Le graphique concernant la qualité de l'air s'affiche automatiquement 
-  output$plotAir <- renderPlot({
-    if (input$idCheckair == T){
-      plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'airT", xlab="Évolution dans le temps")
-      ##plot Évolution qualité de l'air
-    } else {
-      plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'air", xlab="Évolution dans le temps")
-    }
-
-  })
   # Affichage du graphique représentant l'évolution des températures
   output$plotTemp <- renderDygraph({
     if (v$doPlot == FALSE) {print("...")
@@ -356,7 +331,7 @@ shinyServer(function(input, output) {
       City <- input$ville
       date_start <- input$idDateRange[1]#affiche  la date de départ sous la forme [1] "2020-01-01"
       date_end <- input$idDateRange[2]#affiche  la date de départ sous la forme [1] "2023-09-04"
-      time_range <- seq(from = start_date, to = end_date, by = "1 day")
+      # time_range <- seq(from = start_date, to = end_date, by = "1 day")
       meteostat_data <- meteostat_data[Localisation== City]
       # meteostat_data <- meteostat_data [time %in% time_range]
       Temp<-cbind(meteostat_data$tavg,meteostat_data$tmax,meteostat_data$tmin)
@@ -378,27 +353,36 @@ shinyServer(function(input, output) {
     
   })
   
-  # Affichage du graphique représentant l'évolution de la pression
+  # Affichage du graphique représentant l'évolution des précipitations
   output$plotPres <- renderDygraph({
     if (input$go==T){
-    precipitation<-xts(x=meteostat_data$prcp,order.by = meteostat_data$time)
-    colnames(precipitation)<-"precipitation(mm)"
-    dygraph(precipitation, main = "Suivi des précipitations")%>%
-      dySeries("precipitation(mm)",stepPlot = TRUE, fillGraph = TRUE, color = "blue")
+      meteostat_data <- meteostat_data[Localisation== City]
+      precipitation<-xts(x=meteostat_data$prcp,order.by = meteostat_data$time)
+      colnames(precipitation)<-"precipitation(mm)"
+      dygraph(precipitation, main = "precipitation(mm)")%>%
+        dyRangeSelector() %>%
+        dyLegend(show = "follow") %>%
+        dyBarChart()
     } else {## mettre un graph par défaut
       plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'air", xlab="Évolution dans le temps")
     }
   })
 
   # Affichage du graphique représentant l'évolution du vent
-  output$plotWind <- renderPlot({
+  output$plotWind <- renderDygraph({
     if (input$go==T){
-      plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de ventT", xlab="Évolution dans le temps")
-    } else {
-    plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'air", xlab="Évolution dans le temps")
-    }
-    #mettre lignes de codes pour créer le graphique
-    #plot() 
+      meteostat_data <- meteostat_data[Localisation== City]
+    Wind<-cbind(meteostat_data$wspd,meteostat_data$wpgt)
+    Wind_series <- xts(x = Wind, order.by = meteostat_data$time)
+    colnames(Wind_series) <- c("wspd","wpgt")
+    dygraph(Wind_series, main = "Vitesse du Vent",
+            ylab = "km/h") %>%
+      dySeries("wspd", label = "Wind Speed") %>%
+      dySeries("wpgt", label = "Pic de Rafale") %>%
+      dyRangeSelector() %>%
+      dyLegend(show = "follow") } else {
+        plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'air", xlab="Évolution dans le temps")
+      }
   })
   
   # Création du modèle par l'utilisateur et affichage de la matrice de confusion
@@ -430,15 +414,13 @@ shinyServer(function(input, output) {
       mutate(Vent_x_est = cos(Angle_radians),
              Vent_y_nord = sin(Angle_radians))
     
-    
-    # ---------------------------------------------------------------------------#
-    # creation du dataframe:
+    # creation du dataframe
     # on ajoute directement la colonne d'interet de groupe de qualité de l'air:
     datamodele=data.frame(dt_qualite_air$qualite_air_groupe)
     colnames(datamodele)<-"qualite_air_groupe"
     
-   # en fonction des variables selectionnées, on crée un nouveau dataframe:
-    ## récupération des inputs choisis par l'utilisateur 
+    # en fonction des variables selectionnées, on crée un nouveau dataframe
+    # récupération des inputs choisis par l'utilisateur 
     prcp = input$prcp
     wdir = input$wdir
     tmin = input$tmin

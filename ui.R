@@ -21,7 +21,7 @@ shinyUI(
   dashboardPage(skin="blue",
     dashboardHeader(title = "Météo Bretagne", titleWidth = 250
                     ),
-    dashboardSidebar(width = 250,
+    dashboardSidebar(width = 250, ## création du menu
                      sidebarMenu(id  = "menu",
                      menuItem("Notre projet", tabName = "Projet"),
                      menuItem("Carte interactive", tabName = "Carte", icon = icon("map")), 
@@ -102,8 +102,6 @@ shinyUI(
                               br(), br(), br(),
                               "*Pour plus d'information sur l'indice de qualité de l'air vous pouvez vous référez au lien suivant :",
                               uiOutput("lien")
-                        
-                            
                               
                             )
                           )
@@ -112,7 +110,7 @@ shinyUI(
                   tabItem("Carte",
                           fluidRow(
                             column(width = 10,
-                            box(title = "Météo en bretagne du 22/09/2021 au 22/09/2023", leafletOutput("carte",
+                            box(title = "Météo en bretagne du 22/09/2021 au 22/09/2023", leafletOutput("map",
                                                                                 height = 500, width = 950), width = 12)), 
                             column(width = 2, selectInput(inputId = "map", label = "Que voulez-vous observer ?",
                                                                  choices = c("Vent", "Pluie", "ATMO"))), 
@@ -144,9 +142,7 @@ shinyUI(
                           ),
                           box(title = "La pluie ... ",dygraphOutput("plotPres")
                           ),
-                          box(title = "Titre graph évolution du vent", "Box content", plotOutput("plotWind")
-                          ),
-                          box(title = "Évolution de l'indice de qualité de l'air", "Box content", plotOutput("plotAir")
+                          box(title = "Le vent ... ", "Box content", dygraphOutput("plotWind")
                           )
                           )),
                  
@@ -154,9 +150,8 @@ shinyUI(
                  tabItem(
                    "Rapport", 
                    navbarPage( "" ,
-                              tabPanel("Notre rapport", "Ici nous allons afficher une analyse statistique des données permettant d'expliquer la varible qualité de l'air.",
-                          uiOutput("rapport"),
-                         includeMarkdown("Qualite_air.md")),
+                              tabPanel("Notre rapport", "Veuillez trouver ci-dessous notre analyse statistique des données permettant d'expliquer la variable -qualité de l'air-.",
+                             includeMarkdown("Qualite_air.md")),
                               tabPanel("A vous de jouer !", "Sélectionner les paramètres que vous voulez prendre en compte dans votre modèle expliquant 
                                        l'indice ATMO :",
                                        checkboxInput(inputId = "prcp", label = "précipitations quotidienne"),
