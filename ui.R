@@ -114,11 +114,8 @@ shinyUI(
                             column(width = 10,
                             box(title = "Météo en bretagne du 22/09/2021 au 22/09/2023", leafletOutput("carte",
                                                                                 height = 500, width = 950), width = 12)), 
-                            column(width = 2, radioButtons(inputId = "idCheckGroupMap", label = "Que voulez-vous observer ?",
-                                                                 choiceNames =
-                                                                 list(icon("cloud-rain"), icon("wind")),
-                                                                 choiceValues =
-                                                                 list("Pluie", "Vent"))), 
+                            column(width = 2, selectInput(inputId = "map", label = "Que voulez-vous observer ?",
+                                                                 choices = c("Vent", "Pluie", "ATMO"))), 
                             div(style = "position:relative; left:calc(25%);", sliderInput("Date",
                                                                                           "Date sélectionnée",
                                                                                           min = as.Date("2021-09-22","%Y-%m-%d"),
@@ -143,7 +140,7 @@ shinyUI(
                           (entre le 22/09/2021 et 22/09/2023), une fois que vous avez sélectionner vos 
                           paramètres, cliquez sur -Afficher les graphiques-." ,
                           fluidRow(
-                            box(title = "La température ...", dygraphOutput("plotRainTemp")
+                            box(title = "La température ...", dygraphOutput("plotTemp")
                           ),
                           box(title = "La pluie ... ",dygraphOutput("plotPres")
                           ),
