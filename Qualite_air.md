@@ -12,7 +12,8 @@ editor_options:
 
 # Analyse de la qualité de l'air à rennes.
 
-```{r}
+
+```r
 # Chargement des packages utilisé dans la suite du script
 library("data.table")
 library("dplyr")
@@ -76,14 +77,29 @@ météorologiques permettent d'expliquer l'indice ATMO.
 
 ## b) Importation des données
 
-```{r}
 
+```r
 df <- read.csv("C:/Users/renax/Desktop/ACO/S9/Programmation_R/Projet_meteo/Projet_Shiny/quality_index_rennes.csv", header=TRUE)
+```
 
+```
+## Warning in file(file, "rt"): cannot open file 'C:/Users/renax/Desktop/ACO/S9/Programmation_R/Projet_meteo/Projet_Shiny/quality_index_rennes.csv': No such file or
+## directory
+```
+
+```
+## Error in file(file, "rt"): cannot open the connection
+```
+
+```r
 set.seed(45L)
 dt_qualite_air <- data.table(df) # transformation en datatable
 
 summary(dt_qualite_air[,23:31]) # résumé pour les données meteo, pour verifier les classes des colonnes
+```
+
+```
+## Error in `[.data.table`(dt_qualite_air, , 23:31): Item 1 of j is 23 which is outside the column number range [1,ncol=1]
 ```
 
 La variable à expliquer est la colonne code_qual'. Il s'agit d'une
@@ -111,7 +127,8 @@ manquantes pour les colonnes rafales de vent (wgpt), precipitaition
 
 Nous decidons d'enlever les lignes qui présente des données manquantes.
 
-```{r}
+
+```r
 # pour wdir
 dt_qualite_air <- dt_qualite_air[which(! is.na(dt_qualite_air$wpgt)),]
 dt_qualite_air <- dt_qualite_air[which(! is.na(dt_qualite_air$prcp)),]
@@ -132,11 +149,18 @@ A des fins de traitement statistique, nous décidons alors de regrouper
 les catégories 1 et 2 entre elles et les catégories 3 et 4 entre elles
 dans la nouvelle colonne *qualite_air_groupe:*
 
-```{r}
+
+```r
 # creation de la colonnes qualite_air_groupe
 dt_qualite_air[, qualite_air_groupe := ifelse(code_qual %in% c(1, 2), "Groupe 1-2",
                                    ifelse(code_qual %in% c(3, 4), "Groupe 3-4", "Other"))]
+```
 
+```
+## Error in eval(jsub, SDenv, parent.frame()): object 'code_qual' not found
+```
+
+```r
 dt_qualite_air$qualite_air_groupe<- as.factor(dt_qualite_air$qualite_air_groupe)
 ```
 
@@ -157,15 +181,32 @@ plus adaptée pour notre modèle logistique. Nous récuperons les
 composantes x et y de la direction du vent par quelques traitements
 trigonométriques:
 
-```{r}
+
+```r
 # Convertir les degrés en radians
 dt_qualite_air <- dt_qualite_air %>%
   mutate(Angle_radians = wdir * pi / 180)
+```
 
+```
+## Error in `mutate()`:
+## ℹ In argument: `Angle_radians = wdir * pi/180`.
+## Caused by error:
+## ! object 'wdir' not found
+```
+
+```r
 # Calculer les composantes x et y de la direction du vent
 dt_qualite_air <- dt_qualite_air %>%
   mutate(Vent_x_est = cos(Angle_radians),
          Vent_y_nord = sin(Angle_radians))
+```
+
+```
+## Error in `mutate()`:
+## ℹ In argument: `Vent_x_est = cos(Angle_radians)`.
+## Caused by error:
+## ! object 'Angle_radians' not found
 ```
 
 Avant de créer notre premier modèle nous remarquons que parmis nos
@@ -182,14 +223,25 @@ rajoutons en supplémentaire la variables *qualite_air_groupe* afin de
 determiner si elle se positioner de manière particulière face aux
 varibles et aux individus.
 
-```{r}
+
+```r
 # Selection des colonnes qui nous interesse i.e les variables explicatives et la variable réponse
 res<- PCA(dt_qualite_air[, c(22,23,24,25,28,29,30,32,34,35)],scale.unit = TRUE, quali.sup = 8)
+```
+
+```
+## Error in `[.data.table`(dt_qualite_air, , c(22, 23, 24, 25, 28, 29, 30, : Item 1 of j is 22 which is outside the column number range [1,ncol=2]
+```
+
+```r
 # enlever wdir
 
 # Afficher le graphique PCA
 plot(res, habillage = 8, label = "none")
+```
 
+```
+## Error in eval(expr, envir, enclos): object 'res' not found
 ```
 
 On vois sur le graph des individus colorés par groupe de qualité de
@@ -216,25 +268,66 @@ ichez les résultats de l'ANOVA
 
 print(resultat_anova)
 
-```{r}
+
+```r
 # 1. Ajustez le modèle complet
 mod_complet <- glm(qualite_air_groupe ~ tavg + prcp + wspd + wpgt + pres + Vent_x_est + Vent_y_nord, data = dt_qualite_air, family = "binomial")
+```
 
+```
+## Error in eval(predvars, data, env): object 'tavg' not found
+```
+
+```r
 # 2. Ajustez le modèle 2 (sans la variable 'wpgt')
 mod_2 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + pres + Vent_x_est + Vent_y_nord, data = dt_qualite_air, family = "binomial")
+```
 
+```
+## Error in eval(predvars, data, env): object 'tavg' not found
+```
+
+```r
 # 3. Comparez les deux modèles en utilisant la fonction anova()
 anova(mod_complet, mod_2, test="F")
+```
 
+```
+## Error in eval(expr, envir, enclos): object 'mod_complet' not found
+```
+
+```r
 summary(mod_2)
+```
 
+```
+## Error in eval(expr, envir, enclos): object 'mod_2' not found
+```
+
+```r
 ## On recommence avec un autre modèle où on enlève pres
 mod_3 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + Vent_x_est + Vent_y_nord, data = dt_qualite_air, family = "binomial")
+```
 
+```
+## Error in eval(predvars, data, env): object 'tavg' not found
+```
+
+```r
 anova(mod_2, mod_3, test="F")
+```
 
+```
+## Error in eval(expr, envir, enclos): object 'mod_2' not found
+```
+
+```r
 # on garde le modèle 3
 summary(mod_3)
+```
+
+```
+## Error in eval(expr, envir, enclos): object 'mod_3' not found
 ```
 
 Tous les paramètres de notre modèles sont significatifs.

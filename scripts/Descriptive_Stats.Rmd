@@ -15,28 +15,31 @@ library(xts)
 
 
 ```{r}
-meteostat_data <- fread("meteostat_data.csv", header=TRUE)
-meteostat_data$time <- as.Date(meteostat_data$time, format="YYYY-MM-DD")
+data_path <- file.path("..", "data")
+raw_data <- fread(file.path(data_path,"all_raw_data.csv"), header=TRUE)
+raw_data$time <- as.Date(raw_data$time, format="YYYY-MM-DD")
 ```
 
 # On choisit la ville et les dates pour laquelle on prendre les données (faire une liste déroulante)
 ```{r}
+start_date <- as.Date("2021-09-22")
+end_date <- as.Date("2023-09-22")
 City <- "Rennes"
 time_range <- seq(from = start_date, to = end_date, by = "1 day")
-meteostat_data <- meteostat_data[Localisation== City]
-meteostat_data <- meteostat_data [time %in% time_range]
+raw_data <- raw_data[Localisation== City]
+raw_data <- raw_data [time %in% time_range]
 ```
 
 On fait des graphes dynamiques à l'aide de dygraphs, ici la temperature moyenne
 ```{r}
-series <- xts(x = meteostat_data$tavg, order.by = meteostat_data$time)
+series <- xts(x = raw_data$tavg, order.by = raw_data$time)
 dygraph(series)
 ```
 
 On essaye d'afficher la temperature moyenne, mininum et maximum ! 
 ```{r}
-Temp<-cbind(meteostat_data$tavg,meteostat_data$tmax,meteostat_data$tmin)
-Temp_series <- xts(x = Temp, order.by = meteostat_data$time)
+Temp<-cbind(raw_data$tavg,raw_data$tmax,raw_data$tmin)
+Temp_series <- xts(x = Temp, order.by = raw_data$time)
 colnames(Temp_series) <- c("tavg", "tmax", "tmin")
 dygraph(Temp_series, main = "Température")
 ```
@@ -45,18 +48,20 @@ dygraph(Temp_series, main = "Température")
 
 # On affiche la température sous une autre forme, avec Upper/Lower Bars
 ```{r}
-Temp<-cbind(meteostat_data$tavg,meteostat_data$tmax,meteostat_data$tmin)
-Temp_series <- xts(x = Temp, order.by = meteostat_data$time)
+raw_data_Rennes <- raw_data[Localisation== "Rennes"]
+Temp<-cbind(raw_data_Rennes$tavg,raw_data_Rennes$tmax,raw_data_Rennes$tmin)
+Temp_series <- xts(x = Temp, order.by = time_range)
 
 colnames(Temp_series) <- c("tavg", "tmax", "tmin")
 
 dygraph(Temp_series, main = "Temperature (°C)",
         ylab = "Température") %>%
   dySeries(c("tmin", "tavg", "tmax"), label = "Temp (°C)") %>%
-  dyRangeSelector() %>%
   dyOptions(axisLabelFontSize = 12) %>%
   dyLegend(show = "follow") %>%
+  dyRangeSelector(dateWindow = c("2022-01-01", "2023-01-01")) %>%
   dyCrosshair(direction = "vertical")
+  
   
 ```
 
@@ -79,7 +84,7 @@ dyBarChart <- function(dygraph) {
 
 
 ```{r}
-precipitation<-xts(x=meteostat_data$prcp,order.by = meteostat_data$time)
+precipitation<-xts(x=raw_data$prcp,order.by = time_range)
 colnames(precipitation)<-"precipitation(mm)"
 dygraph(precipitation, main = "precipitation(mm)")%>%
   dyRangeSelector() %>%
@@ -89,8 +94,8 @@ dygraph(precipitation, main = "precipitation(mm)")%>%
 
 # Maintenant on peut faire la vitesse du vent ! 
 ```{r}
-Wind<-cbind(meteostat_data$wspd,meteostat_data$wpgt)
-Wind_series <- xts(x = Wind, order.by = meteostat_data$time)
+Wind<-cbind(raw_data$wspd,raw_data$wpgt)
+Wind_series <- xts(x = Wind, order.by = time_range)
 colnames(Wind_series) <- c("wspd","wpgt")
 dygraph(Wind_series, main = "Vitesse du Vent",
         ylab = "km/h") %>%
@@ -99,6 +104,22 @@ dygraph(Wind_series, main = "Vitesse du Vent",
   dyRangeSelector() %>%
   dyLegend(show = "follow") 
 
+```
+
+## Graphe comparaison entre villes 
+
+```{r}
+raw_data <- fread(file.path(data_path,"all_raw_data.csv"), header=TRUE)
+raw_data <- raw_data [time %in% time_range]
+
+choix_ville <- c("Rennes", "Saint-Brieuc")
+precipitation_1<-xts(x=raw_data[Localisation == choix_ville[1]]$prcp,
+                     order.by = time_range)
+precipitation_2 <- xts(x=raw_data[Localisation == choix_ville[2]]$prcp,
+                       order.by = time_range)
+
+dygraph(precipitation_1,main = "Rennes", group = "precipitation")
+dygraph(precipitation_2, main = "Saint-Brieuc", group = "precipitation")
 ```
 
 

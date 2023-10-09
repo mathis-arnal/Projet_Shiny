@@ -204,7 +204,7 @@ print ("Globalemnt même résultat, donc à première vue pas trop de surajustem
 
 print ("on va essayer d'améliorer ça, avec un différent cutoff,
        en faisant la courbe roc avec les données train")
-## On fait donc la courbe ROC 
+## On fait donc la courbe ROC http://127.0.0.1:20533/graphics/a5d997c0-25c4-481f-87cd-10149d79a810.png
 # Create an ROC object using the positive class probabilities
 roc_obj <- roc(datamodele.train$qualite_air_groupe, positive_class_probs)
 

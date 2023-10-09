@@ -93,6 +93,14 @@ shinyServer(function(input, output) {
     r$doAnalyse <- FALSE
   })
   
+  
+  raw_data_spec <- reactive({
+    if (v$doPlot) {
+      return(raw_data[Localisation == input$ville])
+    }
+    return(NULL)
+  })
+  
   # Le graphique concernant la qualité de l'air s'affiche automatiquement 
   output$plotAir <- renderPlot({
     if (input$idCheckair == T){
@@ -105,7 +113,7 @@ shinyServer(function(input, output) {
   })
   # Affichage du graphique représentant l'évolution des températures
   output$plotRainTemp <- renderDygraph({
-    if (v$doPlot == FALSE)  {print('Choisissez une période et une ville...')
+    if (!v$doPlot)  {return(NULL)
     } else {
 # tant que l'utilisateur n'a pas validé ses paramètres aucun graphique ne s'affiche
         
@@ -135,12 +143,12 @@ shinyServer(function(input, output) {
   # Affichage du graphique représentant l'évolution de la precipitation
   
   output$plotPres <- renderDygraph({
-    if (v$doPlot == FALSE) {print('Choisissez une période et une ville...')
+    if (v$doPlot == FALSE) {return(NULL)
     } else {
       raw_data_spec <- raw_data[Localisation == input$ville]
       precipitation<-xts(x=raw_data_spec$prcp,order.by =time_range)
       colnames(precipitation)<-"precipitation(mm)"
-      dygraph(precipitation, main = "Suivi des précipitations")%>%
+      dygraph(precipitation, main = "Suivi des précipitations (mm)")%>%
         dyRangeSelector(input$idDateRange) %>%
         dyOptions(axisLabelFontSize = 12) %>%
         dyLegend(show = "follow") %>%
@@ -151,13 +159,13 @@ shinyServer(function(input, output) {
   
   # Affichage du graphique représentant l'évolution du vent
   output$plotWind <- renderDygraph({
-    if (v$doPlot == FALSE) {print('Choisissez une période et une ville...')
+    if (v$doPlot == FALSE) {return(NULL)
     } else {
       raw_data_spec <- raw_data[Localisation == input$ville]
       Wind<-cbind(raw_data_spec$wspd,raw_data_spec$wpgt)
       wind_series <- xts(x = Wind, order.by = time_range)
       colnames(wind_series) <- c("wspd","wpgt")
-      dygraph(wind_series, main = "Vitesse du Vent",
+      dygraph(wind_series, main = "Vitesse du Vent (km/h)",
               ylab = "km/h") %>%
         dySeries("wspd", label = "Wind Speed") %>%
         dySeries("wpgt", label = "Pic de Rafale") %>%
@@ -167,18 +175,32 @@ shinyServer(function(input, output) {
   })
   
   output$plotAir <- renderDygraph({
-    if (!v$doPlot) {
-      print('Choisissez une période et une ville...')
-    } else {
-      raw_data_spec <- raw_data[Localisation == input$ville]
-      air_series <- xts(x = raw_data_spec$code_qual, order.by = time_range)
-      colnames(air_series) <- "Code_Qualite"
-      dygraph(air_series, main = "Qualité de l'air") %>%
-        dyRangeSelector(input$idDateRange) %>%
-        dySeries("Code_Qualite", stepPlot = TRUE, fillGraph = TRUE, color = "green") %>%
-        dyLegend(show = "follow")
+    if (v$doPlot == FALSE) {
+      return(NULL)  # Do not render unless the "Afficher les graphiques" button is clicked
     }
+    
+    raw_data_spec <- raw_data[Localisation == input$ville]
+    
+    if (is.null(raw_data_spec) || nrow(raw_data_spec) == 0) {
+      print('Aucune donnée disponible pour la ville sélectionnée.')
+      return(NULL)
+    }
+    
+    if (!"code_qual" %in% colnames(raw_data_spec)) {
+      print('Le champ "code_qual" n\'existe pas dans les données.')
+      return(NULL)
+    }
+    
+    air_series <- xts(x = raw_data_spec$code_qual, order.by = time_range)
+    colnames(air_series) <- "Code_Qualite"
+    
+    dygraph(air_series, main = "Qualité de l'air (de 1 à 4)") %>%
+      dyRangeSelector(input$idDateRange) %>%
+      dySeries("Code_Qualite", stepPlot = TRUE, fillGraph = TRUE, color = "green") %>%
+      dyLegend(show = "follow")
   })
+  
+  
   
   
   library(shiny)
@@ -186,25 +208,59 @@ shinyServer(function(input, output) {
   
   output$compPres <- renderDygraph({
     if (!v$doPlot) {
-      print('Choisissez une période et une ville...')
+      return(NULL)
     } else {
       choix_ville <- c("Rennes", "Saint-Brieuc")
-      prec_data <- cbind(raw_data[Localisation == choix_ville[1]]$prcp,
-                         raw_data[Localisation == choix_ville[2]]$prcp)
-      #precipitation_1 <- xts(x = raw_data[Localisation == choix_ville[1]]$prcp,
-      #                       order.by = time_range)
-      #precipitation_2 <- xts(x = raw_data[Localisation == choix_ville[2]]$prcp,
-      #                      order.by = time_range)
-      prec_ts <- xts(x = prec_data,
-                      order.by = time_range)
-      colnames(prec_ts)<- choix_ville
-      dygraph(prec_ts, main = "Comparaison_Precipitation_Ville") %>%
-        dyRangeSelector() %>%
-        dySeries(choix_ville[1], label = paste("prec_",choix_ville[1]),
-        color="blue", strokePattern = "dashed" ) %>%
-        dySeries(choix_ville[2], label = paste("prec_",choix_ville[2]),
-                 color="red") %>%
-        dyRangeSelector()
+      selected_ville <- input$ville
+      
+      # Check if selected_ville is NULL or not in choix_ville
+      if (!is.null(selected_ville) && selected_ville %in% choix_ville) {
+        prec_data <- cbind(raw_data[Localisation == choix_ville[1]]$prcp,
+                           raw_data[Localisation == choix_ville[2]]$prcp)
+        
+        prec_ts <- xts(x = prec_data, order.by = time_range)
+        colnames(prec_ts) <- choix_ville
+        
+        dygraph(prec_ts, main = "Comparaison_Precipitation_Ville") %>%
+          dyRangeSelector() %>%
+          dySeries(choix_ville[1], label = paste("prec_", choix_ville[1]),
+                   color = "blue", strokePattern = "dashed") %>%
+          dySeries(choix_ville[2], label = paste("prec_", choix_ville[2]),
+                   color = "red") %>%
+          dyRangeSelector()
+      } else {
+        # Handle the case where selected_ville is NULL or not in choix_ville
+        return(NULL)
+      }
+    }
+  })
+  
+  output$compPres <- renderDygraph({
+    if (!v$doPlot) {
+      return(NULL)
+    } else {
+      choix_ville <- c("Rennes", "Saint-Brieuc")
+      selected_ville <- input$ville
+      
+      # Check if selected_ville is NULL or not in choix_ville
+      if (!is.null(selected_ville) && selected_ville %in% choix_ville) {
+        prec_data <- cbind(raw_data[Localisation == choix_ville[1]]$prcp,
+                           raw_data[Localisation == choix_ville[2]]$prcp)
+        
+        prec_ts <- xts(x = prec_data, order.by = time_range)
+        colnames(prec_ts) <- choix_ville
+        
+        dygraph(prec_ts, main = "Comparaison_Precipitation_Ville") %>%
+          dyRangeSelector() %>%
+          dySeries(choix_ville[1], label = paste("prec_", choix_ville[1]),
+                   color = "blue", strokePattern = "dashed") %>%
+          dySeries(choix_ville[2], label = paste("prec_", choix_ville[2]),
+                   color = "red") %>%
+          dyRangeSelector()
+      } else {
+        # Handle the case where selected_ville is NULL or not in choix_ville
+        return(NULL)
+      }
     }
   })
   
