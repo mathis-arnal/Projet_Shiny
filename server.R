@@ -357,25 +357,172 @@ shinyServer(function(input, output) {
     
     raw_data_spec <- raw_data[Localisation == input$ville]
     
-    if (is.null(raw_data_spec) || nrow(raw_data_spec) == 0) {
-      print('Aucune donnée disponible pour la ville sélectionnée.')
-      return(NULL)
-    }
-    
-    if (!"code_qual" %in% colnames(raw_data_spec)) {
-      print('Le champ "code_qual" n\'existe pas dans les données.')
-      return(NULL)
-    }
-    
     air_series <- xts(x = raw_data_spec$code_qual, order.by = time_range)
     colnames(air_series) <- "Code_Qualite"
     
     dygraph(air_series, main = "Qualité de l'air (de 1 à 4)") %>%
       dyRangeSelector(input$idDateRange) %>%
-      dySeries("Code_Qualite", stepPlot = TRUE, fillGraph = TRUE, color = "green") %>%
+      dySeries("Code_Qualite", stepPlot = TRUE,color = "green") %>%
       dyLegend(show = "follow")
   })
   
+  
+
+# Observe Event pour les comparaisons 
+c <- reactiveValues(doComp = FALSE)
+observeEvent(input$go_comp, {
+  # 0 will be coerced to FALSE
+  # 1+ will be coerced to TRUE
+  c$doComp <- input$go_comp
+  print(input$go_comp) # Add this line for debugging
+})
+
+observeEvent(input$ville_comp, {
+  c$doComp <- FALSE
+  #print(input$ville_comp)
+  #print(list(input$ville_comp))
+})
+
+observeEvent(input$idDateRange_comp, {
+  c$doComp <- FALSE
+  print(input$idDateRange_comp)
+})
+
+output$compPres <- renderDygraph({
+  if (!c$doComp) {
+    return(NULL)
+  } else {
+    
+    selected_ville <- as.list(input$ville_comp)
+    
+    # Use sapply to extract precipitation data for each town in selected_ville
+    prec_data_list <- sapply(selected_ville, function(ville) {
+      raw_data[raw_data$Localisation == ville, "prcp"]
+    }, simplify = FALSE)
+    
+    # Combine the precipitation data into a data frame
+    prec_data <- do.call(cbind, prec_data_list)
+    
+    
+    prec_ts <- xts(x = prec_data, order.by = time_range)
+    colnames(prec_ts) <- selected_ville
+    
+    
+    dy <- dygraph(prec_ts, main = "Comparaison_Precipitation_Ville")
+    dy <- dy %>% dyRangeSelector(input$idDateRange)
+    
+    # Add dySeries for each town in selected_ville
+    for (ville in selected_ville) {
+      dy <- dy %>% dySeries(ville, label= ville)
+    }
+    
+    dy
+    
+  }
+})
+
+
+output$compTemp <- renderDygraph({
+  if (!c$doComp) {
+    return(NULL)
+  } else {
+    
+    selected_ville <- as.list(input$ville_comp)
+    
+    # Use sapply to extract precipitation data for each town in selected_ville
+    prec_data_list <- sapply(selected_ville, function(ville) {
+      raw_data[raw_data$Localisation == ville, "tavg"]
+    }, simplify = FALSE)
+    
+    # Combine the precipitation data into a data frame
+    prec_data <- do.call(cbind, prec_data_list)
+    
+    
+    prec_ts <- xts(x = prec_data, order.by = time_range)
+    colnames(prec_ts) <- selected_ville
+    
+    
+    dy <- dygraph(prec_ts, main = "Comparaison_Temperature_Ville")
+    dy <- dy %>% dyRangeSelector(input$idDateRange)
+    
+    # Add dySeries for each town in selected_ville
+    for (ville in selected_ville) {
+      dy <- dy %>% dySeries(ville, label= ville)
+    }
+    
+    dy
+    
+  }
+})
+
+
+output$compWind <- renderDygraph({
+  if (!c$doComp) {
+    return(NULL)
+  } else {
+    
+    selected_ville <- as.list(input$ville_comp)
+    
+    # Use sapply to extract precipitation data for each town in selected_ville
+    prec_data_list <- sapply(selected_ville, function(ville) {
+      raw_data[raw_data$Localisation == ville, "wspd"]
+    }, simplify = FALSE)
+    
+    # Combine the precipitation data into a data frame
+    prec_data <- do.call(cbind, prec_data_list)
+    
+    
+    prec_ts <- xts(x = prec_data, order.by = time_range)
+    colnames(prec_ts) <- selected_ville
+    
+    
+    dy <- dygraph(prec_ts, main = "Comparaison_VitesseDuVent_Ville")
+    dy <- dy %>% dyRangeSelector(input$idDateRange)
+    
+    # Add dySeries for each town in selected_ville
+    for (ville in selected_ville) {
+      dy <- dy %>% dySeries(ville, label= ville)
+    }
+    
+    dy
+    
+  }
+})
+
+output$compAir <- renderDygraph({
+  if (!c$doComp) {
+    return(NULL)
+  } else {
+    
+    selected_ville <- as.list(input$ville_comp)
+    
+    # Use sapply to extract precipitation data for each town in selected_ville
+    prec_data_list <- sapply(selected_ville, function(ville) {
+      raw_data[raw_data$Localisation == ville, "code_qual"]
+    }, simplify = FALSE)
+    
+    # Combine the precipitation data into a data frame
+    prec_data <- do.call(cbind, prec_data_list)
+    
+    
+    prec_ts <- xts(x = prec_data, order.by = time_range)
+    colnames(prec_ts) <- selected_ville
+    
+    
+    dy <- dygraph(prec_ts, main = "Comparaison_QualitéAir_Ville")
+    dy <- dy %>% dyRangeSelector(input$idDateRange)
+    
+    # Add dySeries for each town in selected_ville
+    for (ville in selected_ville) {
+      dy <- dy %>% dySeries(ville, label= ville)
+    }
+    
+    dy
+    
+  }
+})
+
+
   ## ANALYSE INDICE ATMO 
   ##################################################################################
   

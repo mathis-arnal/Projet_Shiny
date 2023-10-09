@@ -220,7 +220,13 @@ varibles et aux individus.
 ```r
 # Selection des colonnes qui nous interesse i.e les variables explicatives et la variable réponse
 library(Factoshiny)
+```
 
+```
+## Error in library(Factoshiny): aucun package nommé 'Factoshiny' n'est trouvé
+```
+
+```r
 # Factoshiny(dt_qualite_air[, c(22:25,28:30,32,34:62)])
 ```
 
@@ -341,20 +347,7 @@ stepwise(mod_complet,direction="forward/backward",criterion="AIC",trace=FALSE)
 ```
 
 ```
-## 
-## Call:  glm(formula = qualite_air_groupe ~ vent_x_lag2 + Vent_y_nord + 
-##     wspd + vent_y_lag2 + tmax + tavg + vent_x_lag1 + vent_y_lag1 + 
-##     prcp + tmin_lag3 + vent_y_lag3, family = "binomial", data = datamod)
-## 
-## Coefficients:
-## (Intercept)  vent_x_lag2  Vent_y_nord         wspd  vent_y_lag2         tmax         tavg  vent_x_lag1  vent_y_lag1  
-##    -0.93953      0.44533      0.76183     -0.13103      0.59079      0.21846     -0.17360      0.63055      0.48221  
-##        prcp    tmin_lag3  vent_y_lag3  
-##    -0.13536     -0.06121      0.33782  
-## 
-## Degrees of Freedom: 710 Total (i.e. Null);  699 Residual
-## Null Deviance:	    775.1 
-## Residual Deviance: 515.1 	AIC: 539.1
+## Error in eval(mf, parent.frame()): object 'datamod' not found
 ```
 
 ```r

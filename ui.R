@@ -47,7 +47,8 @@ shinyUI(
                                     "Rennes", "Saint-Brieuc", "Vannes", "Brest", "Quimper"
                                   )),
                        dateRangeInput(inputId = "idDateRange", label = "Sélectionner la période qui vous intéresse : ",
-                                      start = "2020-01-01", end = "2023-09-22", format = "yyyy-mm-dd",
+                                      start = "2021-09-22", end = "2023-09-22", format = "yyyy-mm-dd",
+                                      min = "2021-09-22",max = "2023-09-22",
                                       language = "fr", separator = " to "),
                       # Bouton poour lancer l'analyse 
                        div(style = "position:relative; left:calc(15%);", actionButton( "go", "Afficher les graphiques")),
@@ -179,7 +180,7 @@ shinyUI(
                           (entre le 22/09/2021 et 22/09/2023), une fois que vous avez sélectionné vos 
                           paramètres, cliquez sur -Afficher les graphiques-.",
                    fluidRow(
-                     box(title = "Comparaison de la température", dygraphOutput("compRainTemp")
+                     box(title = "Comparaison de la température", dygraphOutput("compTemp")
                      ),
                      box(title = "Comparaison de la pluie",dygraphOutput("compPres")
                      ),
