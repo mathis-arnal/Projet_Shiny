@@ -214,7 +214,7 @@ shinyUI(
                                            actionButton( "allez", "Lancer mon analyse")),
                                        br(),
                                        box(title = "Votre analyse", width = 12, solidHeader = TRUE,
-                                           verbatimTextOutput("modele"), plotOutput("CM")
+                                           verbatimTextOutput("text"), plotOutput("CM")
                                            ) 
                                        )
                  ))

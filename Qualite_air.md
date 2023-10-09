@@ -186,27 +186,11 @@ trigonométriques:
 # Convertir les degrés en radians
 dt_qualite_air <- dt_qualite_air %>%
   mutate(Angle_radians = wdir * pi / 180)
-```
 
-```
-## Error in `mutate()`:
-## ℹ In argument: `Angle_radians = wdir * pi/180`.
-## Caused by error:
-## ! object 'wdir' not found
-```
-
-```r
 # Calculer les composantes x et y de la direction du vent
 dt_qualite_air <- dt_qualite_air %>%
   mutate(Vent_x_est = cos(Angle_radians),
          Vent_y_nord = sin(Angle_radians))
-```
-
-```
-## Error in `mutate()`:
-## ℹ In argument: `Vent_x_est = cos(Angle_radians)`.
-## Caused by error:
-## ! object 'Angle_radians' not found
 ```
 
 Avant de créer notre premier modèle nous remarquons que parmis nos
@@ -230,7 +214,7 @@ res<- PCA(dt_qualite_air[, c(22,23,24,25,28,29,30,32,34,35)],scale.unit = TRUE, 
 ```
 
 ```
-## Error in `[.data.table`(dt_qualite_air, , c(22, 23, 24, 25, 28, 29, 30, : Item 1 of j is 22 which is outside the column number range [1,ncol=2]
+## Error in `[.data.table`(dt_qualite_air, , c(22, 23, 24, 25, 28, 29, 30, : Item 1 of j is 22 which is outside the column number range [1,ncol=5]
 ```
 
 ```r
@@ -275,7 +259,7 @@ mod_complet <- glm(qualite_air_groupe ~ tavg + prcp + wspd + wpgt + pres + Vent_
 ```
 
 ```
-## Error in eval(predvars, data, env): object 'tavg' not found
+## Error in model.frame.default(formula = qualite_air_groupe ~ tavg + prcp + : les longueurs des variables diffèrent (trouvé pour 'tavg')
 ```
 
 ```r
@@ -284,7 +268,7 @@ mod_2 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + pres + Vent_x_est + Vent_
 ```
 
 ```
-## Error in eval(predvars, data, env): object 'tavg' not found
+## Error in model.frame.default(formula = qualite_air_groupe ~ tavg + prcp + : les longueurs des variables diffèrent (trouvé pour 'tavg')
 ```
 
 ```r
@@ -310,7 +294,7 @@ mod_3 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + Vent_x_est + Vent_y_nord,
 ```
 
 ```
-## Error in eval(predvars, data, env): object 'tavg' not found
+## Error in model.frame.default(formula = qualite_air_groupe ~ tavg + prcp + : les longueurs des variables diffèrent (trouvé pour 'tavg')
 ```
 
 ```r

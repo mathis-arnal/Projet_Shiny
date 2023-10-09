@@ -19,6 +19,7 @@ library(dplyr)
 library(car)
 library(FactoMineR)
 library(ROCR)
+library(pROC)
 
 
 ## ouverture de nos jeux de données 
