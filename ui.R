@@ -18,6 +18,7 @@ mytheme <- create_theme(
 
 # Define UI 
 shinyUI(
+  #includeScript(path = "scripts/js4checkbox.js"),
   dashboardPage(skin="blue",
                 dashboardHeader(title = "Météo Bretagne", titleWidth = 250
                 ),
@@ -175,7 +176,7 @@ shinyUI(
                           (entre le 22/09/2021 et 22/09/2023), une fois que vous avez sélectionné vos 
                           paramètres, cliquez sur -Afficher les graphiques-.",
                                  fluidRow(
-                                   box(title = "Comparaison de la température", dygraphOutput("compRainTemp")
+                                   box(title = "Comparaison de la température", dygraphOutput("compTemp")
                                    ),
                                    box(title = "Comparaison de la pluie",dygraphOutput("compPres")
                                    ),
