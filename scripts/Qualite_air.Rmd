@@ -224,26 +224,27 @@ library(Factoshiny)
 La première dimension permet de bien séparer les individus, qui sont les
 jours selon un axe horizontal.
 
-En comparant avec le graphique des variables, ce sont les varibles de
+En comparant avec le graphique des variables, ce sont les variables de
 température qui participent à la création de l'axe 1. Alors les jours
-sont bien séparé selon leur temprétaure (été/hiver), mais ne semble pas
-nous indiquer particulièrement sur la qualité de l'air.
+sont bien séparés selon leur température (été/hiver), mais ne semblent
+pas nous indiquer particulièrement sur la qualité de l'air.
 
-En effet, on vois sur le graphique des individus colorés par groupe de
-qualité de l'air que le groupe 1-2 se réparti le long des deux première
-dimension de manière assez homogène. Les individus des groupes 3-4 sont
-legèrement plus vers le haut du graphique et les individus du groupe 1-2
-plutot vers le bas, mais les deux groupes et se répartisse de manière
-homogène le long de la première dimension. On retouve cela avec le
-barycentre des groupes 1-2 et 3-4 qui sont environ aux même coordonées
-sur la première dimension mais qui sont un peu séparés sur la deuxième.
+En effet, on voit sur le graphique des individus colorés par groupe de
+qualité de l'air que le groupe 1-2 se répartit le long des deux
+premières dimensions de manière assez homogène. Les individus des
+groupes 3-4 sont légèrement plus vers le haut du graphique et les
+individus du groupe 1-2 plutôt vers le bas, mais les deux groupes se
+répartissent de manière homogène le long de la première dimension. On
+retrouve cela avec le barycentre des groupes 1-2 et 3-4 qui sont environ
+aux mêmes coordonnées sur la première dimension mais qui sont un peu
+séparés sur la deuxième.
 
 On peut donc supposer que les variables contribuant le plus à la
 deuxième dimension pourraient nous donner des informations sur la
 qualité de l'air. Ces variables sont la précipitation en corrélation
 positive et le vent en corrélation négative avec l'axe de la deuxième
-dimension. Le groupe 1-2, de bonne qualité de l'air est ainsi d'avantage
-lié à des fortes précipitations et des direction de vent particulières,
+dimension. Le groupe 1-2, de bonne qualité de l'air est ainsi davantage
+lié à des fortes précipitations et des directions de vent particulières,
 et inversement pour le groupe 3-4, associé à une moins bonne qualité de
 l'air.
 
@@ -276,25 +277,25 @@ summary(modfinal)
 
 ```
 
-Avec le critène d'AIC, on trouve un modèle à 11 paramètres, dont les
-effets sont tous significatifs au seuil 0.10, et avec 8 paramètres dont
-les effets sont significatifs au seuil 0.05.
+Avec le critère d'AIC, on trouve un modèle à 11 paramètres, dont les
+effets sont tous significatifs au seuil de 0.10, et avec 8 paramètres
+dont les effets sont significatifs au seuil de 0.05.
 
-Regardons en detail les effets de ces variables. D'après le résumé, on
-retrouve que:
+Regardons en détail les effets de ces variables. D'après le résumé, on
+retrouve que :
 
 -   (\*\*\*) Les deux paramètres qui semblent expliquer au mieux la
     qualité de l'air sont la vitesse du vent et la direction du vent en
-    y, ie. vers le nord. Une augmentation et de vent_y, donc un vent le
-    nord est associé à une diminution de la augmetnation de bonne
-    qualité de l'air. Pour la vitesse du vent, une augmentation de la
-    vitesse du vent, est associé à une diminution de la probabilité de
-    bonne qualité de l'air.
+    y, c'est-à-dire vers le nord. Une augmentation de la vitesse du vent
+    en y, donc un vent du nord, est associée à une diminution de la
+    probabilité d'une bonne qualité de l'air. Pour la vitesse du vent,
+    une augmentation de cette dernière est associée à une diminution de
+    la probabilité d'une bonne qualité de l'air.
 
 -   (\*\*) Les autres variables qui ont des effets sont significatifs
     concernent à la fois les données du jour (tmax), les données de la
     veille (vent_x_lag_1), et les données de l'avant veille
-    (vent_x_lag_1). L'interprétation des paramètres par paramètres est
+    (vent_x_lag_2). L'interprétation des paramètres par paramètres est
     analogue au paragraphe ci dessus.
 
 -   (\* et .) En regardant les niveaux de significativité plus grands et
@@ -309,12 +310,10 @@ retrouve que:
     de l'air sont les variables qualifiant el vent du jour, de la
     veille, et meme des jours précédents. On aura globalement un vent
     vers le Nord et l'Est qui sera associé à une probabilité de bonne
-    qualité de l'air.
-
--   En plus du vent, la précipitation du jour et la tempétature du jour
-    expliquent la qualité de l'air dans notre modèle: de fortes
-    précipitation et des petites températures maximales sont associées à
-    une bonne qualité de l'air.
+    qualité de l'air. En plus du vent, la précipitation du jour et la
+    tempétature du jour expliquent la qualité de l'air dans notre
+    modèle: de fortes précipitations et des petites températures
+    maximales sont associées à une bonne qualité de l'air.
 
 ## Conclusion
 
