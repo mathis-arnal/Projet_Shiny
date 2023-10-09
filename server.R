@@ -11,8 +11,7 @@ shinyServer(function(input, output) {
   #Permet de sélectionner les données que l'utilisateur veut télécharger
   datasetInput <- reactive({
     switch(input$dataset,
-           "Données météo" = meteostat_data,##données météo
-           "Données indice qualité de l'air" = air_quality,##données qualité de l'air
+           "Données brutes" = all_raw_data,##données brutes
     )
   })
   # Téléchargement dataset

@@ -52,7 +52,7 @@ shinyUI(
                       # Bouton poour lancer l'analyse 
                        div(style = "position:relative; left:calc(15%);", actionButton( "go", "Afficher les graphiques")),
                        selectInput("dataset", "Choisissez le jeu de données que vous souhaitez télécharger :",
-                                 choices = c("Données météo", "Données indice qualité de l'air")),
+                                 choices = ("Données brutes")),
                      
                         # Amélioration de l'emplacement du bouton
                        div(style = "position:relative; left:calc(25%);",downloadButton("downloadData","Télécharger"))),
