@@ -10,7 +10,7 @@ editor_options:
     wrap: 72
 ---
 
-# Analyse de la qualité de l'air à rennes.
+# Analyse de la qualité de l'air Rennes.
 
 ```{r}
 # Chargement des packages utilisé dans la suite du script
