@@ -5,6 +5,7 @@ library(fontawesome)
 library(ggmap)
 library(leaflet)
 library(ggmap)
+library(readr)
 # importation du jeu de donnes
 all_raw_data <- read.csv("data/all_raw_data.csv")
 
@@ -289,7 +290,7 @@ m
 ##################################################################################
 # QUALITE DE L'AIR'
 ####### creation des Icons pour le vent a partir d'un imagne internet
-date="2021-09-25"
+date="2021-09-22"
 # recuperation
 VectQualair= as.vector(all_raw_data[which(all_raw_data$time==date),grep("code_qual", colnames(all_raw_data))])
 VectQualair<-as.vector(VectQualair$code_qual)
@@ -353,7 +354,7 @@ m <- leaflet() %>%
   
   addMarkers(lng = -2.7576, lat = 47.6572, 
              icon = qualairVannesIcon,
-             popup = paste("Vannes: ",Vectprcp[5], "mm")) 
+             popup = paste("Vannes: ",VectQualair[5], "mm")) 
 
 m
 

@@ -4,11 +4,12 @@ library("dplyr")
 library("car")
 library("FactoMineR")
 library("ggplot2")
+library("ROCR")
+library("pROC") 
 # ---------------------------------------------------------------------------#
 ######
 # importation des données
-
-df <- read.csv("C:/Users/renax/Desktop/ACO/S9/Programmation_R/Projet_meteo/Projet_Shiny/data/quality_index_rennes.csv", 
+df <- read.csv(file.path("data/quality_index_rennes.csv"), 
                header=TRUE)
 set.seed(45L)
 dt_qualite_air <- data.table(df) # transformation en datatable
@@ -34,7 +35,7 @@ dt_qualite_air <- dt_qualite_air %>%
   mutate(Vent_x_est = cos(Angle_radians),
          Vent_y_nord = sin(Angle_radians))
 
- # ---------------------------------------------------------------------------#
+# ---------------------------------------------------------------------------#
 ######
 #######
 # creation du dataframe:
@@ -131,57 +132,105 @@ datamodele.test <- datamodele[-train_indices, ]
 library("caret")
 
 # Model estimations
-# fitControl.LGOCV <- trainControl(
-#   method = "LGOCV",
-#   number=10,
-#   p=0.6
-# )
+#fitControl.LGOCV <- trainControl(
+#  method = "LGOCV",
+#  number=10,
+#  p=0.6
+#)
 
-mod.glm <- train(
-  qualite_air_groupe ~ .,
-  data=datamodele.train,
-  method="glm",
-  family="binomial"
-  #,  trControl = fitControl.LGOCV
-)
-
-mod.glm<-glm(qualite_air_groupe ~ .,
-             data=datamodele.train,
-             family="binomial")
+#mod.glm.LGOCV <- train(
+#  qualite_air_groupe ~ .,
+#  data=datamodele.train,
+#  method="glm",
+#  trControl = fitControl.LGOCV
+#)
 
 # pred.glm.grid <- predict(mod.glm.LGOCV,newdata=datamodele.test) # glm prediction
-# mod.glm$results
-#pred.glm <- predict(mod.glm, newdata = datamodele.test)
 
+#mod.glm.LGOCV$results
 
-scores.glm <- predict(mod.glm, newdata = datamodele.test, type = "response")
-library(ROCR)
-
-# Créer un objet de performance ROC
-roc_obj <- prediction(scores.glm, datamodele.test$qualite_air_groupe)
-
-# Calculer les valeurs de la courbe ROC
-roc_values <- performance(roc_obj, "tpr", "fpr")
-
-# Tracer la courbe ROC
-plot(roc_values, main = "Courbe ROC")
-
-
-# Calculer les valeurs de la courbe ROC
-roc_values <- performance(roc_obj, "tpr", "fpr")
-
-pred=ifelse(scores.glm>0.2,"Groupe3_4","Groupe1_2")
-
-mean(pred==datamodele.test$qualite_air_groupe)
-
-#Matrice de confusion
-t(table(datamodele.test$qualite_air_groupe,pred))
-
-
+#pred.glm <- predict(mod.glm.LGOCV)
 
 ###############
-# joli rendu:
-conf_matrix <- confusionMatrix(data = pred.glm, reference = datamodele.test$qualite_air_groupe)
+
+# Define the control parameters for cross-validation
+ctrl <- trainControl(
+  method = "cv",             # Cross-validation method
+  number = 10,               # Number of folds
+  summaryFunction = twoClassSummary,  # For binary classification
+  classProbs = TRUE          # For obtaining class probabilities
+)
+
+datamodele.train$qualite_air_groupe <- make.names(datamodele.train$qualite_air_groupe)
+
+# Fit the logistic regression model with cross-validation on the training data
+mod.glm_cv <- train(
+  qualite_air_groupe ~ .,   # Formula for your model
+  data = datamodele.train,        # Training data
+  method = "glm",           # Use glm for logistic regression
+  family = "binomial",      # Binomial family for logistic regression
+  trControl = ctrl          # Use the control parameters defined earlier
+)
+
+# On voit la prediction sur les donnees train 
+
+scores.glm_test <- predict(mod.glm_cv, newdata = datamodele.train, type = "prob")
+positive_class_probs <- scores.glm_test[, 1]
+
+##############
+# On fait une première matrice de confusion 
+
+# pred_Bayes <- ifelse(positive_class_probs > 0.5, "Groupe_1.2", "Groupe_3.4")
+# pred_Bayes <- as.factor(pred_Bayes)
+# conf_matrix <- confusionMatrix(data = pred_Bayes,
+#                                reference = as.factor(datamodele.train$qualite_air_groupe))
+# conf_matrix
+# print("Bonne accuracy juste 
+#       On se rend compte que la spécificité est pas ouf")
+# print("On regarde sur test si on a la même acc")
+# 
+# print("Essayons sur les données test")
+
+### ----- matrice de confusion sur les données test:
+
+# scores.glm_train <- predict(mod.glm_cv, newdata = datamodele.test, type = "prob")
+# positive_class_probs_test <- scores.glm_train[, 1]
+# pred_Bayes_test <- ifelse(positive_class_probs_test > 0.5, "Groupe_1-2", "Groupe_3-4")
+# pred_Bayes_test <- as.factor(pred_Bayes_test)
+# conf_matrix <- confusionMatrix(data = pred_Bayes_test,
+#                                reference =as.factor( datamodele.test$qualite_air_groupe))
+# conf_matrix
+# print ("Globalemnt même résultat, donc à première vue pas trop de surajustement")
+# 
+# print ("on va essayer d'améliorer ça, avec un différent cutoff,
+#        en faisant la courbe roc avec les données train")
+#########################
+
+
+## On fait donc la courbe ROC http://127.0.0.1:20533/graphics/a5d997c0-25c4-481f-87cd-10149d79a810.png
+# Create an ROC object using the positive class probabilities
+roc_obj <- roc(datamodele.train$qualite_air_groupe, positive_class_probs)
+
+# Plot the ROC curve for the train dataset
+plot(roc_obj)
+
+# Get the coordinates of the ROC curve
+optimal_cutoff <- coords(roc_obj, "best")$threshold
+
+# Classify using the optimal cutoff
+pred_CV <- ifelse(positive_class_probs > optimal_cutoff, "Groupe_1.2", "Groupe_3.4")
+pred_CV <- as.factor(pred_CV)
+
+# Evaluate the model on the test dataset
+accuracy <- mean(pred_CV == datamodele.train$qualite_air_groupe)
+datamodele.train$qualite_air_groupe <- as.factor(datamodele.train$qualite_air_groupe)
+
+cat("Accuracy on Test Set:", accuracy, "\n")
+
+conf_matrix <- confusionMatrix(data = pred_CV,
+                               reference = datamodele.train$qualite_air_groupe)
+conf_matrix
+
 
 # un joli plot
 
@@ -241,9 +290,9 @@ phrase=paste("L'accuracy est de",round(conf_matrix$overall[1],3),", la sensibili
 
 fulltxtacc<- (paste("Votre accuracy = ",round(conf_matrix$overall[1],3),".", accuracytxt))
 fulltxtsensi<-(paste("Votre sensibilité (capacité à donner un résultat positif lorsqu'une hypothèse est vérifiée) =",
-            round(conf_matrix$byClass[1],3),".",sensitxt))
+                     round(conf_matrix$byClass[1],3),".",sensitxt))
 fulltxtspeci<-(paste("Votre spécificité (capacité à donner un résultat négatif lorsqu'une hypothèse est vérifiée) =",
-            round(conf_matrix$byClass[2],3),".",specitxt))
+                     round(conf_matrix$byClass[2],3),".",specitxt))
 
 
 
