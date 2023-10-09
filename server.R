@@ -239,29 +239,51 @@ shinyServer(function(input, output) {
       # Create the testing dataset (data.test)
       datamodele.test <- datamodele[-train_indices, ]
       
-      ### ensuite on constuit le modèle et on le test
-      # Model estimations
-      fitControl.LGOCV <- trainControl(
-        method = "LGOCV",
-        number=10,
-        p=0.6
+      ctrl <- trainControl(
+        method = "cv",             # Cross-validation method
+        number = 10,               # Number of folds
+        summaryFunction = twoClassSummary,  # For binary classification
+        classProbs = TRUE          # For obtaining class probabilities
       )
       
-      mod.glm.LGOCV <- train(
-        qualite_air_groupe ~ .,
-        data=datamodele.train,
-        method="glm",
-        trControl = fitControl.LGOCV
+      datamodele.train$qualite_air_groupe <- make.names(datamodele.train$qualite_air_groupe)
+      
+      # Fit the logistic regression model with cross-validation on the training data
+      mod.glm_cv <- train(
+        qualite_air_groupe ~ .,   # Formula for your model
+        data = datamodele.train,        # Training data
+        method = "glm",           # Use glm for logistic regression
+        family = "binomial",      # Binomial family for logistic regression
+        trControl = ctrl          # Use the control parameters defined earlier
       )
       
-      pred.glm.grid <- predict(mod.glm.LGOCV,newdata=datamodele.test) # glm prediction
+      # On voit la prediction sur les donnees train 
       
-      #mod.glm.LGOCV$results
+      scores.glm_test <- predict(mod.glm_cv, newdata = datamodele.train, type = "prob")
+      positive_class_probs <- scores.glm_test[, 1]
+      # Create an ROC object using the positive class probabilities
+      roc_obj <- roc(datamodele.train$qualite_air_groupe, positive_class_probs)
       
-      pred.glm <- predict(mod.glm.LGOCV)
-      ###############
-      # joli rendu:
-      conf_matrix <- confusionMatrix(data = pred.glm, reference = datamodele.train$qualite_air_groupe)
+      # Plot the ROC curve for the train dataset
+      plot(roc_obj)
+      
+      # Get the coordinates of the ROC curve
+      optimal_cutoff <- coords(roc_obj, "best")$threshold
+      
+      # Classify using the optimal cutoff
+      pred_CV <- ifelse(positive_class_probs > optimal_cutoff, "Groupe_1.2", "Groupe_3.4")
+      pred_CV <- as.factor(pred_CV)
+      
+      # Evaluate the model on the test dataset
+      accuracy <- mean(pred_CV == datamodele.train$qualite_air_groupe)
+      datamodele.train$qualite_air_groupe <- as.factor(datamodele.train$qualite_air_groupe)
+      
+      cat("Accuracy on Test Set:", accuracy, "\n")
+      
+      conf_matrix <- confusionMatrix(data = pred_CV,
+                                     reference = datamodele.train$qualite_air_groupe)
+      conf_matrix
+      
       
       # un joli plot
       
@@ -277,6 +299,7 @@ shinyServer(function(input, output) {
         scale_fill_gradient(low="white", high="#009194") +
         theme_bw() + theme(legend.position = "none")
       
+      ##
       # petite morale sur l'accuracy, la sensi et la spéci:
       
       #Accuracy:
@@ -317,13 +340,13 @@ shinyServer(function(input, output) {
       
       phrase=paste("L'accuracy est de",round(conf_matrix$overall[1],3),", la sensibilité est de", round(conf_matrix$byClass[1],3),
                    ", et la spécificité est de", round(conf_matrix$byClass[2],3))
-      print(phrase)
       
-      fulltxtacc<- (paste("Votre accuracy = ",round(conf_matrix$overall[1],3),".",accuracytxt))
+      fulltxtacc<- (paste("Votre accuracy = ",round(conf_matrix$overall[1],3),".", accuracytxt))
       fulltxtsensi<-(paste("Votre sensibilité (capacité à donner un résultat positif lorsqu'une hypothèse est vérifiée) =",
                            round(conf_matrix$byClass[1],3),".",sensitxt))
       fulltxtspeci<-(paste("Votre spécificité (capacité à donner un résultat négatif lorsqu'une hypothèse est vérifiée) =",
                            round(conf_matrix$byClass[2],3),".",specitxt))
+      print(phrase)
       print(fulltxtacc)
       print(fulltxtsensi)
       print(fulltxtspeci)
