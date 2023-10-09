@@ -298,65 +298,83 @@ shinyServer(function(input, output) {
   # utilisation de renderDygraph qui permet d'afficher les graphiques 
   # fait avec le package dygraph
   output$plotTemp <- renderDygraph({
-    if (v$doPlot == FALSE) {print("...")
+    if (v$doPlot == FALSE) {return(NULL)
     } else {
-    if (input$go==T){# tant que l'utilisateur n'a pas validé ses paramètres aucun graphique ne s'affiche
-      meteostat_data$time <- as.Date(meteostat_data$time, format="YYYY-MM-DD")
-      City <- input$ville
-      date_start <- input$idDateRange[1]#affiche  la date de départ sous la forme [1] "2020-01-01"
-      date_end <- input$idDateRange[2]#affiche  la date de départ sous la forme [1] "2023-09-04"
-      # time_range <- seq(from = start_date, to = end_date, by = "1 day")
-      meteostat_data <- meteostat_data[Localisation== City]
-      # meteostat_data <- meteostat_data [time %in% time_range]
-      Temp<-cbind(meteostat_data$tavg,meteostat_data$tmax,meteostat_data$tmin)
-      Temp_series <- xts(x = Temp, order.by = meteostat_data$time)
+      raw_data_spec <- raw_data[Localisation == input$ville]
+      Temp<-cbind(raw_data_spec$tavg,raw_data_spec$tmax,raw_data_spec$tmin)
+      Temp_series <- xts(x = Temp, order.by = time_range)
       
       colnames(Temp_series) <- c("tavg", "tmax", "tmin")
       
       dygraph(Temp_series, main = "Temperature (°C)",
               ylab = "Température") %>%
         dySeries(c("tmin", "tavg", "tmax"), label = "Temp (°C)") %>%
-        dyRangeSelector() %>%
+        dyRangeSelector(input$idDateRange) %>%
         dyOptions(axisLabelFontSize = 12) %>%
         dyLegend(show = "follow") %>%
         dyCrosshair(direction = "vertical")
-      
-    } else {
-      plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Températures moyennes", xlab="Évolution dans le temps")
-    }}
-    
+    }
   })
+
   
   # Affichage du graphique représentant l'évolution des précipitations
-  output$plotPrec <- renderDygraph({
-    if (input$go==T){
-      meteostat_data <- meteostat_data[Localisation== City]
-      precipitation<-xts(x=meteostat_data$prcp,order.by = meteostat_data$time)
+  output$plotPres <- renderDygraph({
+    if (v$doPlot == FALSE) {return(NULL)
+    } else {
+      raw_data_spec <- raw_data[Localisation == input$ville]
+      precipitation<-xts(x=raw_data_spec$prcp,order.by =time_range)
       colnames(precipitation)<-"precipitation(mm)"
-      dygraph(precipitation, main = "precipitation(mm)")%>%
-        dyRangeSelector() %>%
+      dygraph(precipitation, main = "Suivi des précipitations (mm)")%>%
+        dyRangeSelector(input$idDateRange) %>%
+        dyOptions(axisLabelFontSize = 12) %>%
         dyLegend(show = "follow") %>%
-        dyBarChart()
-    } else {## mettre un graph par défaut
-      plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'air", xlab="Évolution dans le temps")
+        dyCrosshair(direction = "vertical") %>%
+        dySeries("precipitation(mm)",stepPlot = TRUE, fillGraph = TRUE, color = "blue")
     }
   })
 
   # Affichage du graphique représentant l'évolution du vent
   output$plotWind <- renderDygraph({
-    if (input$go==T){
-      meteostat_data <- meteostat_data[Localisation== City]
-    Wind<-cbind(meteostat_data$wspd,meteostat_data$wpgt)
-    Wind_series <- xts(x = Wind, order.by = meteostat_data$time)
-    colnames(Wind_series) <- c("wspd","wpgt")
-    dygraph(Wind_series, main = "Vitesse du Vent",
-            ylab = "km/h") %>%
-      dySeries("wspd", label = "Wind Speed") %>%
-      dySeries("wpgt", label = "Pic de Rafale") %>%
-      dyRangeSelector() %>%
-      dyLegend(show = "follow") } else {
-        plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'air", xlab="Évolution dans le temps")
-      }
+    if (v$doPlot == FALSE) {return(NULL)
+    } else {
+      raw_data_spec <- raw_data[Localisation == input$ville]
+      Wind<-cbind(raw_data_spec$wspd,raw_data_spec$wpgt)
+      wind_series <- xts(x = Wind, order.by = time_range)
+      colnames(wind_series) <- c("wspd","wpgt")
+      dygraph(wind_series, main = "Vitesse du Vent (km/h)",
+              ylab = "km/h") %>%
+        dySeries("wspd", label = "Wind Speed") %>%
+        dySeries("wpgt", label = "Pic de Rafale") %>%
+        dyRangeSelector(input$idDateRange) %>%
+        dyLegend(show = "follow")
+    }
+  })
+  
+  # Affichage du grahique représentant la qualité de l'air
+  output$plotAir <- renderDygraph({
+    if (v$doPlot == FALSE) {
+      return(NULL)  # Do not render unless the "Afficher les graphiques" button is clicked
+    }
+    
+    raw_data_spec <- raw_data[Localisation == input$ville]
+    
+    if (is.null(raw_data_spec) || nrow(raw_data_spec) == 0) {
+      print('Aucune donnée disponible pour la ville sélectionnée.')
+      return(NULL)
+    }
+    
+    if (!"code_qual" %in% colnames(raw_data_spec)) {
+      print('Le champ "code_qual" n\'existe pas dans les données.')
+      return(NULL)
+    }
+    
+    air_series <- xts(x = raw_data_spec$code_qual, order.by = time_range)
+    colnames(air_series) <- "Code_Qualite"
+    
+    dygraph(air_series, main = "Qualité de l'air (de 1 à 4)") %>%
+      dyRangeSelector(input$idDateRange) %>%
+      dySeries("Code_Qualite", stepPlot = TRUE, fillGraph = TRUE, color = "green") %>%
+      dyLegend(show = "follow")
   })
   
   ## ANALYSE INDICE ATMO 

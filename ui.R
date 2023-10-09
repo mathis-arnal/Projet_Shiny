@@ -29,6 +29,7 @@ shinyUI(
                      menuItem("Notre projet", tabName = "Projet"),
                      menuItem("Carte interactive", tabName = "Carte", icon = icon("map")), 
                      menuItem("Données météo", tabName = "Météo", icon = icon("cloud-rain")),
+                     menuItem("Comparaison entre villes", tabName = "Comparaison", icon = icon("code-compare")),
                      menuItem("Qualité de l'air", tabName = "Rapport", icon = icon("searchengin")),
                      
                      conditionalPanel('input.menu == "Météo"', # creation d'un sous-menu spécifique à l'onglet "données météo"
@@ -43,19 +44,38 @@ shinyUI(
                                     "Quimper"
                                   ),
                                   choiceValues = list(
-                                    "text", "text", "text", "text", "text"
+                                    "Rennes", "Saint-Brieuc", "Vannes", "Brest", "Quimper"
                                   )),
                        dateRangeInput(inputId = "idDateRange", label = "Sélectionner la période qui vous intéresse : ",
                                       start = "2020-01-01", end = "2023-09-22", format = "yyyy-mm-dd",
                                       language = "fr", separator = " to "),
-                       checkboxInput(inputId = "idCheckair", label = "Indice de qualité de l'air"),
                       # Bouton poour lancer l'analyse 
                        div(style = "position:relative; left:calc(15%);", actionButton( "go", "Afficher les graphiques")),
                        selectInput("dataset", "Choisissez le jeu de données que vous souhaitez télécharger :",
                                  choices = c("Données météo", "Données indice qualité de l'air")),
                      
                         # Amélioration de l'emplacement du bouton
-                       div(style = "position:relative; left:calc(25%);",downloadButton("downloadData","Télécharger"))))
+                       div(style = "position:relative; left:calc(25%);",downloadButton("downloadData","Télécharger"))),
+                     
+                     conditionalPanel('input.menu == "Comparaison"',
+                                      tags$style("p {font-size: 18px;font-weight: bold}"),
+                                      div(style = "position:relative; left:calc(25%);", br(), p("Fonctionnalités")),
+                                      checkboxGroupInput("ville_comp", "Choisissez les villes de votre choix :",
+                                                         choices= c(
+                                                           "Rennes" = "Rennes",
+                                                           "Saint-Brieuc" = "Saint-Brieuc",
+                                                           "Vannes" = "Vannes",
+                                                           "Brest" = "Brest",
+                                                           "Quimper" = "Quimper"
+                                                         )),
+                                      dateRangeInput(inputId = "idDateRange_comp", label = "Sélectionner la période qui vous intéresse : ",
+                                                     start = "2021-09-22", end = "2023-09-22",min = "2021-09-22",max = "2023-09-22",
+                                                     format = "yyyy-mm-dd",
+                                                     language = "fr", separator = " to "),
+                                      ##Bouton poour lancer l'analyse 
+                                      div(style = "position:relative; left:calc(15%);",
+                                          actionButton( "go_comp", "Afficher les graphiques"))
+                     ))
                      
                      ),
     ## Mise en place de dashboardBody
@@ -142,16 +162,35 @@ shinyUI(
                           "Ici, vous pouvez observer les données météo de la ville qui vous intéresse sur une période souhaitée
                           (entre le 22/09/2021 et 22/09/2023), une fois que vous avez sélectionner vos 
                           paramètres, cliquez sur -Afficher les graphiques-." ,
-                          fluidRow(
-                            box(title = "La température ...", dygraphOutput("plotTemp")
+                          fluidRow(box(title = "Évolution de la température", dygraphOutput("plotTemp")
                           ),
-                          box(title = "La pluie ... ",dygraphOutput("plotPrec")
+                          box(title = "Évolution de la pluie",dygraphOutput("plotPres")
                           ),
-                          box(title = "Le vent ... ", "Box content", dygraphOutput("plotWind")
+                          box(title = " Évolution du vent", dygraphOutput("plotWind")
+                          ),
+                          box(title = "Évolution de l'indice de qualité de l'air", dygraphOutput("plotAir")
                           )
-                          )),
+                          ) ),
                  
-                 # troisème onglet "Qualité de l'air"
+                 # quatrième onglet "Comparaison des villes"
+                 tabItem(
+                   "Comparaison",
+                   "Ici, vous pouvez réaliser des comparaisons entre villes (2 par 2 pour plus de visibilité) sur une période souhaitée
+                          (entre le 22/09/2021 et 22/09/2023), une fois que vous avez sélectionné vos 
+                          paramètres, cliquez sur -Afficher les graphiques-.",
+                   fluidRow(
+                     box(title = "Comparaison de la température", dygraphOutput("compRainTemp")
+                     ),
+                     box(title = "Comparaison de la pluie",dygraphOutput("compPres")
+                     ),
+                     box(title = " Comparaison du vent", dygraphOutput("compWind")
+                     ),
+                     box(title = "Comparaison de l'indice de qualité de l'air", dygraphOutput("compAir")
+                     )
+                   )
+                 ),
+                 
+                 # cinquième onglet "Qualité de l'air"
                  tabItem(
                    "Rapport", 
                    navbarPage( "" ,
