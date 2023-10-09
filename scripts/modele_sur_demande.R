@@ -152,10 +152,6 @@ library("caret")
 #pred.glm <- predict(mod.glm.LGOCV)
 
 ###############
-# joli rendu:
-#conf_matrix <- confusionMatrix(data = pred.glm, reference = datamodele.train$qualite_air_groupe)
-
-
 
 # Define the control parameters for cross-validation
 ctrl <- trainControl(
@@ -181,29 +177,36 @@ mod.glm_cv <- train(
 scores.glm_test <- predict(mod.glm_cv, newdata = datamodele.train, type = "prob")
 positive_class_probs <- scores.glm_test[, 1]
 
+##############
 # On fait une première matrice de confusion 
-pred_Bayes <- ifelse(positive_class_probs > 0.5, "Groupe_1.2", "Groupe_3.4")
-pred_Bayes <- as.factor(pred_Bayes)
-conf_matrix <- confusionMatrix(data = pred_Bayes,
-                               reference = datamodele.train$qualite_air_groupe)
-conf_matrix
-print("Bonne accuracy juste 
-      On se rend compte que la spécificité est pas ouf")
-print("On regarde sur test si on a la même acc")
 
-print("Essayons sur les données test")
+# pred_Bayes <- ifelse(positive_class_probs > 0.5, "Groupe_1.2", "Groupe_3.4")
+# pred_Bayes <- as.factor(pred_Bayes)
+# conf_matrix <- confusionMatrix(data = pred_Bayes,
+#                                reference = as.factor(datamodele.train$qualite_air_groupe))
+# conf_matrix
+# print("Bonne accuracy juste 
+#       On se rend compte que la spécificité est pas ouf")
+# print("On regarde sur test si on a la même acc")
+# 
+# print("Essayons sur les données test")
 
-scores.glm_train <- predict(mod.glm_cv, newdata = datamodele.test, type = "prob")
-positive_class_probs_test <- scores.glm_train[, 1]
-pred_Bayes_test <- ifelse(positive_class_probs_test > 0.5, "Groupe_1.2", "Groupe_3.4")
-pred_Bayes_test <- as.factor(pred_Bayes_test)
-conf_matrix <- confusionMatrix(data = pred_Bayes_test,
-                               reference = datamodele.test$qualite_air_groupe)
-conf_matrix
-print ("Globalemnt même résultat, donc à première vue pas trop de surajustement")
+### ----- matrice de confusion sur les données test:
 
-print ("on va essayer d'améliorer ça, avec un différent cutoff,
-       en faisant la courbe roc avec les données train")
+# scores.glm_train <- predict(mod.glm_cv, newdata = datamodele.test, type = "prob")
+# positive_class_probs_test <- scores.glm_train[, 1]
+# pred_Bayes_test <- ifelse(positive_class_probs_test > 0.5, "Groupe_1-2", "Groupe_3-4")
+# pred_Bayes_test <- as.factor(pred_Bayes_test)
+# conf_matrix <- confusionMatrix(data = pred_Bayes_test,
+#                                reference =as.factor( datamodele.test$qualite_air_groupe))
+# conf_matrix
+# print ("Globalemnt même résultat, donc à première vue pas trop de surajustement")
+# 
+# print ("on va essayer d'améliorer ça, avec un différent cutoff,
+#        en faisant la courbe roc avec les données train")
+#########################
+
+
 ## On fait donc la courbe ROC http://127.0.0.1:20533/graphics/a5d997c0-25c4-481f-87cd-10149d79a810.png
 # Create an ROC object using the positive class probabilities
 roc_obj <- roc(datamodele.train$qualite_air_groupe, positive_class_probs)
@@ -227,8 +230,6 @@ cat("Accuracy on Test Set:", accuracy, "\n")
 conf_matrix <- confusionMatrix(data = pred_CV,
                                reference = datamodele.train$qualite_air_groupe)
 conf_matrix
-
-
 
 
 # un joli plot
