@@ -16,11 +16,14 @@ mytheme <- create_theme(
   )
 )
 
-# Define UI 
+# Notre UI
 shinyUI(
-  dashboardPage(skin="blue",
+  ## Mise en place de dashboardPage
+  dashboardPage(skin="blue", # choix du thème principal
+    ## Mise en place de dashboardHeader
     dashboardHeader(title = "Météo Bretagne", titleWidth = 250
-                    ),
+                    ), # titre du site web
+    ## Mise en place de dashboardSidebar
     dashboardSidebar(width = 250, ## création du menu
                      sidebarMenu(id  = "menu",
                      menuItem("Notre projet", tabName = "Projet"),
@@ -28,7 +31,7 @@ shinyUI(
                      menuItem("Données météo", tabName = "Météo", icon = icon("cloud-rain")),
                      menuItem("Qualité de l'air", tabName = "Rapport", icon = icon("searchengin")),
                      
-                     conditionalPanel('input.menu == "Météo"',
+                     conditionalPanel('input.menu == "Météo"', # creation d'un sous-menu spécifique à l'onglet "données météo"
                      tags$style("p {font-size: 18px;font-weight: bold}"),
                      div(style = "position:relative; left:calc(25%);", br(), p("Fonctionnalités")),
                      radioButtons("ville", "Choisissez la ville de votre choix :",
@@ -46,18 +49,19 @@ shinyUI(
                                       start = "2020-01-01", end = "2023-09-22", format = "yyyy-mm-dd",
                                       language = "fr", separator = " to "),
                        checkboxInput(inputId = "idCheckair", label = "Indice de qualité de l'air"),
-                      ##Bouton poour lancer l'analyse 
+                      # Bouton poour lancer l'analyse 
                        div(style = "position:relative; left:calc(15%);", actionButton( "go", "Afficher les graphiques")),
                        selectInput("dataset", "Choisissez le jeu de données que vous souhaitez télécharger :",
                                  choices = c("Données météo", "Données indice qualité de l'air")),
                      
-                        # Bouton
+                        # Amélioration de l'emplacement du bouton
                        div(style = "position:relative; left:calc(25%);",downloadButton("downloadData","Télécharger"))))
                      
                      ),
-    dashboardBody(chooseSliderSkin("Flat"),
+    ## Mise en place de dashboardBody
+    dashboardBody(chooseSliderSkin("Flat"),# modification de l'apparence du Slider de la date en dessous de la carte interactive
       
-      use_theme(mytheme),
+      use_theme(mytheme), #appel à notre thème pour améliorer l'apparence de l'application
       
       tags$head(tags$style(HTML('
       .main-header .logo {
@@ -69,8 +73,8 @@ shinyUI(
       tags$head(tags$style(type='text/css', 
                            ".slider-animate-button { font-size: 20pt !important; }")))),
       
-      # navbarPage
-      navbarPage("Des bottes et un ciré ?", 
+      # utilisation de navbarPage 
+      navbarPage("Des bottes ou un ciré ?", # slogan de l'application
                  # premier onglet présentation
                  tabItems(
                    # First tab content
@@ -83,21 +87,22 @@ shinyUI(
                               "Nous avons sélectionné les données météorologiques de 5 villes bretonnes afin de simplifier le traitement des données.", br(), 
                               "Un premier onglet « Carte interactive » vous donne la possibilité de sélectionner un phénomène (« pluie » ou « vent ») et de 
                               visualiser son évolution dans le temps entre le 22/09/2021 et le 22/01/2023. L’interface permet s’arrêter à une date T ou bien de visualiser son 
-                              évolution de manière automatique.", br(), 
+                              évolution de manière automatique.", br(), br(),
                               "L’onglet « Données météo », permet de visualiser de manière quantitative les différents paramètres météorologiques pour une ville sélectionnée 
                               ainsi que pour une période donnée. Il est aussi possible de comparer les villes entre elles. Enfin, les fichiers de données utilisés sont téléchargeables 
-                              pour que vous puissiez y avoir accès.", br(), 
+                              pour que vous puissiez y avoir accès.", br(), br(),
                               "L’onglet « Qualité de l’air », présente notre étude statistique concernant l'indice de qualité de l'air*. Elle a permis de mettre en lumière les 
                               paramètres permettant d'expliquer au mieux cet indicateur. Vous pouvez aussi vous-même créer votre modèle en choisissant différents paramètres afin 
                               d’essayer de prédire au mieux l’indicateur de qualité de l’air en Bretagne.", br(), 
                               "Notre objectif était de permettre une visualisation simple et interactive des différents phénomènes météorologiques en Bretagne. 
-                              Ainsi qu’une analyse de ces données pour pouvoir expliquer l’indice de qualité de l’air observé en Bretagne dans 5 villes sélectionnées.", br(), 
+                              Ainsi qu’une analyse de ces données pour pouvoir expliquer l’indice de qualité de l’air observé en Bretagne dans 5 villes sélectionnées.", br(), br(),
                               "Nos pistes d’améliorations sont :" , br(), 
+                              "- Augmenter le nombre de variable à visualiser sur la carte interactive", br(),
                               "-	Mettre à jour de manière automatique les données (actualisation tous les jours).", br(),
                               "-	Améliorer et affiner la visualisation en sélectionnant un nombre de ville plus important.", br(),
                               "-	Permettre à l’utilisateur de télécharger son analyse sous un Rmarkdown.", br(),
-                              "-	Améliorer notre modèle prédictif. ", br(), 
-                              "Ce projet, nous a beaucoup plus et nous espérons que l’utilisation de l’application vous plaira également.", br(), br(),
+                              "-	Améliorer notre modèle prédictif en utilisant d'autres modèle ainsi que d'autres critères d'évaluation. ", br(),br(), 
+                              "Ce projet, nous a beaucoup plus et nous espérons que l’utilisation de l’application vous plaira également." , br(), "Alors des bottes ou un ciré ?", br(), br(),
                               "Renée, Mathis et Lou", 
                               br(), br(), br(),
                               "*Pour plus d'information sur l'indice de qualité de l'air vous pouvez vous référez au lien suivant :",
@@ -106,7 +111,7 @@ shinyUI(
                             )
                           )
                  ),
-                 # deuxième onglet carte
+                 # deuxième onglet "carte interactive"
                   tabItem("Carte",
                           fluidRow(
                             column(width = 10,
@@ -121,7 +126,7 @@ shinyUI(
                                                                                           value = as.Date("2021-09-22"), 
                                                                                           timeFormat="%Y-%m-%d", 
                                                                                           width = "50%",
-                                                                                          animate = animationOptions(interval = 300,
+                                                                                          animate = animationOptions(interval = 300,## animation du slider
                                                                                                                      playButton = icon('play', "fa-2x"),
                                                                                                                      pauseButton = icon('pause', "fa-2x"))))
                                 
@@ -140,7 +145,7 @@ shinyUI(
                           fluidRow(
                             box(title = "La température ...", dygraphOutput("plotTemp")
                           ),
-                          box(title = "La pluie ... ",dygraphOutput("plotPres")
+                          box(title = "La pluie ... ",dygraphOutput("plotPrec")
                           ),
                           box(title = "Le vent ... ", "Box content", dygraphOutput("plotWind")
                           )
@@ -151,7 +156,7 @@ shinyUI(
                    "Rapport", 
                    navbarPage( "" ,
                               tabPanel("Notre rapport", "Veuillez trouver ci-dessous notre analyse statistique des données permettant d'expliquer la variable -qualité de l'air-.",
-                             includeMarkdown("Qualite_air.md")),
+                             includeMarkdown("Qualite_air.md")),## affichage du fichier md
                               tabPanel("A vous de jouer !", "Sélectionner les paramètres que vous voulez prendre en compte dans votre modèle expliquant 
                                        l'indice ATMO :",
                                        checkboxInput(inputId = "prcp", label = "précipitations quotidienne"),

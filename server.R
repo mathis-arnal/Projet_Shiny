@@ -1,5 +1,7 @@
 shinyServer(function(input, output) {
   
+  ## MISE A DISPOSITION DES RESSOURCES : LIEN ET TELECHARGEMENT DONNEES
+  ##################################################################################
   #Lien indice ATMO
   output$lien <- renderUI({
     url <- a("Indice ATMO", href="https://www.atmo-france.org/article/lindice-atmo")
@@ -26,11 +28,18 @@ shinyServer(function(input, output) {
 
   ## CARTE INTERACTIVE
   ##################################################################################
-  output$map <- renderLeaflet({
+  output$map <- renderLeaflet({## creation de la carte de base 
     ### creations de la map
       m<- leaflet() %>%
-          addTiles()  # Ajoute noms par défaut de la carte
-
+          addTiles()%>%# Ajoute noms par défaut de la carte
+        addMarkers(lng = -1.6788, lat = 48.1123, popup = "Rennes") %>%
+        addMarkers(lng = -4.4886, lat = 48.3917, popup = "Brest") %>%
+        addMarkers(lng = -4.1035, lat = 47.9959, popup = "Quimper") %>%
+        addMarkers(lng = -2.7617, lat = 48.5144, popup = "Saint- Brieuc") %>%
+        addMarkers(lng = -2.7576, lat = 47.6572, popup = "Saint- Brieuc") 
+  })
+  
+  observe ({# utilisation de observe pour modifier la carte lorsque la date change 
     date <- input$Date
     cond <- input$map
     
@@ -100,7 +109,8 @@ shinyServer(function(input, output) {
 
 
       ### creation de la map
-      m %>%
+      leafletProxy("map") %>% # utilisation de leafletProxy pour ne pas regénérer toute la carte
+        clearMarkers() %>%
         addMarkers(lng = -1.6788, lat = 48.1123,
                    icon = WindRennes,
                    popup = paste( "Rennes: ",VectwindDir[1], "°")) %>%
@@ -168,7 +178,8 @@ shinyServer(function(input, output) {
       )
 
       ### creation de la map
-      m %>%
+      leafletProxy("map") %>% # utilisation de leafletProxy pour ne pas regénérer toute la carte
+        clearMarkers() %>%
         addMarkers(lng = -1.6788, lat = 48.1123,
                    icon = prcpRennesIcon,
                    popup = paste("Rennes: ",Vectprcp[1], "mm")) %>%
@@ -193,7 +204,7 @@ shinyServer(function(input, output) {
     ######## INDICE ATMO
      else if (cond == "ATMO"){
       VectQualair= as.vector(all_raw_data[which(all_raw_data$time==date),grep("code_qual", colnames(all_raw_data))])
-      # VectQualair<-as.vector(VectQualair$code_qual)
+      #VectQualair<-as.vector(VectQualair$code_qual)
 
       # creation d'une fonction classe la qualité de l'air
       get_qualair <- function(x){
@@ -211,7 +222,6 @@ shinyServer(function(input, output) {
 
       # on applique la fonction a notre vecteur
       qualairall<- paste(sapply(VectQualair, get_qualair),"_qualairIcon", sep="")
-
 
       qualairRennesIcon <- makeIcon(
         iconUrl = paste("Icons/",qualairall[1],".jpg",sep=""),
@@ -234,7 +244,8 @@ shinyServer(function(input, output) {
         iconWidth = 60, iconHeight = 40)
 
       ### creation de la map
-       m %>%
+      leafletProxy("map") %>% # utilisation de leafletProxy pour ne pas regénérer toute la carte
+        clearMarkers() %>%
         addMarkers(lng = -1.6788, lat = 48.1123,
                    icon = qualairRennesIcon,
                    popup = paste("Rennes: ",VectQualair[1])) %>%
@@ -253,10 +264,12 @@ shinyServer(function(input, output) {
 
         addMarkers(lng = -2.7576, lat = 47.6572,
                    icon = qualairVannesIcon,
-                   popup = paste("Vannes: ",Vectprcp[5], "mm"))
-      }
+                   popup = paste("Vannes: ",VectQualair[5], "mm"))
+     }
   })
-    
+
+  ## DONNEES METEO
+  ##################################################################################
   
   # l'objet v permet de maîtriser l'affichage des graphiques
   v <- reactiveValues(doPlot = FALSE)
@@ -265,8 +278,8 @@ shinyServer(function(input, output) {
   # lorsque l'on clique sur Afficher les graphiques
   # doPlot prend la valeur TRUE
   observeEvent(input$go, {
-    # 0 will be coerced to FALSE
-    # 1+ will be coerced to TRUE
+    # 0 = FALSE
+    # 1 = TRUE
     v$doPlot <- input$go
   })
   
@@ -281,12 +294,84 @@ shinyServer(function(input, output) {
     v$doPlot <- FALSE
   }) 
   
+  # Affichage du graphique représentant l'évolution des températures
+  # utilisation de renderDygraph qui permet d'afficher les graphiques 
+  # fait avec le package dygraph
+  output$plotTemp <- renderDygraph({
+    if (v$doPlot == FALSE) {print("...")
+    } else {
+    if (input$go==T){# tant que l'utilisateur n'a pas validé ses paramètres aucun graphique ne s'affiche
+      meteostat_data$time <- as.Date(meteostat_data$time, format="YYYY-MM-DD")
+      City <- input$ville
+      date_start <- input$idDateRange[1]#affiche  la date de départ sous la forme [1] "2020-01-01"
+      date_end <- input$idDateRange[2]#affiche  la date de départ sous la forme [1] "2023-09-04"
+      # time_range <- seq(from = start_date, to = end_date, by = "1 day")
+      meteostat_data <- meteostat_data[Localisation== City]
+      # meteostat_data <- meteostat_data [time %in% time_range]
+      Temp<-cbind(meteostat_data$tavg,meteostat_data$tmax,meteostat_data$tmin)
+      Temp_series <- xts(x = Temp, order.by = meteostat_data$time)
+      
+      colnames(Temp_series) <- c("tavg", "tmax", "tmin")
+      
+      dygraph(Temp_series, main = "Temperature (°C)",
+              ylab = "Température") %>%
+        dySeries(c("tmin", "tavg", "tmax"), label = "Temp (°C)") %>%
+        dyRangeSelector() %>%
+        dyOptions(axisLabelFontSize = 12) %>%
+        dyLegend(show = "follow") %>%
+        dyCrosshair(direction = "vertical")
+      
+    } else {
+      plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Températures moyennes", xlab="Évolution dans le temps")
+    }}
+    
+  })
+  
+  # Affichage du graphique représentant l'évolution des précipitations
+  output$plotPrec <- renderDygraph({
+    if (input$go==T){
+      meteostat_data <- meteostat_data[Localisation== City]
+      precipitation<-xts(x=meteostat_data$prcp,order.by = meteostat_data$time)
+      colnames(precipitation)<-"precipitation(mm)"
+      dygraph(precipitation, main = "precipitation(mm)")%>%
+        dyRangeSelector() %>%
+        dyLegend(show = "follow") %>%
+        dyBarChart()
+    } else {## mettre un graph par défaut
+      plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'air", xlab="Évolution dans le temps")
+    }
+  })
+
+  # Affichage du graphique représentant l'évolution du vent
+  output$plotWind <- renderDygraph({
+    if (input$go==T){
+      meteostat_data <- meteostat_data[Localisation== City]
+    Wind<-cbind(meteostat_data$wspd,meteostat_data$wpgt)
+    Wind_series <- xts(x = Wind, order.by = meteostat_data$time)
+    colnames(Wind_series) <- c("wspd","wpgt")
+    dygraph(Wind_series, main = "Vitesse du Vent",
+            ylab = "km/h") %>%
+      dySeries("wspd", label = "Wind Speed") %>%
+      dySeries("wpgt", label = "Pic de Rafale") %>%
+      dyRangeSelector() %>%
+      dyLegend(show = "follow") } else {
+        plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'air", xlab="Évolution dans le temps")
+      }
+  })
+  
+  ## ANALYSE INDICE ATMO 
+  ##################################################################################
+  
   # l'objet r permet de maîtriser l'affichage de l'analyse
   r <- reactiveValues(doAnalyse = FALSE)
   
   observeEvent(input$allez, {
     r$doAnalyse <- input$allez
   })
+  
+  # dès que l'utilisateur va modifier les paramètres sélectionnés alors
+  # r va prendre la valeur FALSE, l'utilisateur devra donc re-cliquer sur 
+  # le bouton pour relancer l'analyse
   
   observeEvent(input$prcp, {
     r$doAnalyse <- FALSE
@@ -322,76 +407,13 @@ shinyServer(function(input, output) {
     r$doAnalyse <- FALSE
   })
   
-  # Affichage du graphique représentant l'évolution des températures
-  output$plotTemp <- renderDygraph({
-    if (v$doPlot == FALSE) {print("...")
-    } else {
-    if (input$go==T){# tant que l'utilisateur n'a pas validé ses paramètres aucun graphique ne s'affiche
-      meteostat_data$time <- as.Date(meteostat_data$time, format="YYYY-MM-DD")
-      City <- input$ville
-      date_start <- input$idDateRange[1]#affiche  la date de départ sous la forme [1] "2020-01-01"
-      date_end <- input$idDateRange[2]#affiche  la date de départ sous la forme [1] "2023-09-04"
-      # time_range <- seq(from = start_date, to = end_date, by = "1 day")
-      meteostat_data <- meteostat_data[Localisation== City]
-      # meteostat_data <- meteostat_data [time %in% time_range]
-      Temp<-cbind(meteostat_data$tavg,meteostat_data$tmax,meteostat_data$tmin)
-      Temp_series <- xts(x = Temp, order.by = meteostat_data$time)
-      
-      colnames(Temp_series) <- c("tavg", "tmax", "tmin")
-      
-      dygraph(Temp_series, main = "Temperature (°C)",
-              ylab = "Température") %>%
-        dySeries(c("tmin", "tavg", "tmax"), label = "Temp (°C)") %>%
-        dyRangeSelector() %>%
-        dyOptions(axisLabelFontSize = 12) %>%
-        dyLegend(show = "follow") %>%
-        dyCrosshair(direction = "vertical")
-      
-    } else {
-      plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Températures moyennes", xlab="Évolution dans le temps")
-    }}
-    
-  })
-  
-  # Affichage du graphique représentant l'évolution des précipitations
-  output$plotPres <- renderDygraph({
-    if (input$go==T){
-      meteostat_data <- meteostat_data[Localisation== City]
-      precipitation<-xts(x=meteostat_data$prcp,order.by = meteostat_data$time)
-      colnames(precipitation)<-"precipitation(mm)"
-      dygraph(precipitation, main = "precipitation(mm)")%>%
-        dyRangeSelector() %>%
-        dyLegend(show = "follow") %>%
-        dyBarChart()
-    } else {## mettre un graph par défaut
-      plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'air", xlab="Évolution dans le temps")
-    }
-  })
-
-  # Affichage du graphique représentant l'évolution du vent
-  output$plotWind <- renderDygraph({
-    if (input$go==T){
-      meteostat_data <- meteostat_data[Localisation== City]
-    Wind<-cbind(meteostat_data$wspd,meteostat_data$wpgt)
-    Wind_series <- xts(x = Wind, order.by = meteostat_data$time)
-    colnames(Wind_series) <- c("wspd","wpgt")
-    dygraph(Wind_series, main = "Vitesse du Vent",
-            ylab = "km/h") %>%
-      dySeries("wspd", label = "Wind Speed") %>%
-      dySeries("wpgt", label = "Pic de Rafale") %>%
-      dyRangeSelector() %>%
-      dyLegend(show = "follow") } else {
-        plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="Indice qualité de l'air", xlab="Évolution dans le temps")
-      }
-  })
-  
   # Création du modèle par l'utilisateur et affichage de la matrice de confusion
   output$modele <- renderPrint({
-    if (r$doAnalyse == FALSE) {print("...")
+    if (r$doAnalyse == FALSE) {print("...")## tant que l'utilisateur n'a pas validé son modèle rien ne s'affiche
     } else {
     
     set.seed(45L)
-    dt_qualite_air <- air_quality 
+    dt_qualite_air <- air_quality ## recupération du jeu de données
     
     summary(dt_qualite_air[,23:31]) # résumé pour les données meteo, pour verifier les classes des colonnes
     
@@ -447,19 +469,19 @@ shinyServer(function(input, output) {
     if (tavg == T){
       datamodele$tavg <-dt_qualite_air$tavg}
     
-    ## Creation des data train (80%) et test (20%)
+    # Creation des data train (80%) et test (20%)
     # séparation en train et en test
     n.train <- round(nrow(datamodele)*0.80,0)
     train_indices <- sample(1:nrow(datamodele), n.train)
     
-    # Create the training dataset (data.train)
+    # Creation du data.train
     datamodele.train <- datamodele[train_indices, ]
     
-    # Create the testing dataset (data.test)
+    # Creation du data.test 
     datamodele.test <- datamodele[-train_indices, ]
     
-    ### ensuite on constuit le modèle et on le test
-    # Model estimations
+    # Ensuite on constuit le modèle et on le test
+    # Estimation du modèle avec glm
     mod.glm <- train(
       qualite_air_groupe ~ .,
       data=datamodele.train,
@@ -470,7 +492,7 @@ shinyServer(function(input, output) {
     
     mod.glm<-glm(qualite_air_groupe ~ .,
                  data=datamodele.train,
-                 family="binomial")
+                 family="binomial") ## ???
     
     # pred.glm.grid <- predict(mod.glm.LGOCV,newdata=datamodele.test) # glm prediction
     # mod.glm$results
@@ -494,7 +516,8 @@ shinyServer(function(input, output) {
     
     pred=ifelse(scores.glm>0.2,"Groupe3_4","Groupe1_2")
     
-    mean(pred==datamodele.test$qualite_air_groupe)
+    ## Affichage des résultats à l'utilisateur
+    print(mean(pred==datamodele.test$qualite_air_groupe))
     print("Votre modèle : ")
     print(mod.glm)
     #Matrice de confusion
