@@ -217,6 +217,8 @@ shinyServer(function(input, output) {
           qualair="Degrade"}
         if (x==4){
           qualair="Mauvais"}
+        if (x==4){
+          qualair="Tresmauvais"}
         return (qualair)}
 
       # on applique la fonction a notre vecteur
