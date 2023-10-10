@@ -220,21 +220,7 @@ varibles et aux individus.
 ```r
 # Selection des colonnes qui nous interesse i.e les variables explicatives et la variable réponse
 library(Factoshiny)
-```
 
-```
-## Warning: le package 'Factoshiny' a été compilé avec la version R 4.1.3
-```
-
-```
-## Le chargement a nécessité le package : FactoInvestigate
-```
-
-```
-## Warning: le package 'FactoInvestigate' a été compilé avec la version R 4.1.3
-```
-
-```r
 # Factoshiny(dt_qualite_air[, c(22:25,28:30,32,34:62)])
 ```
 
@@ -354,21 +340,6 @@ summary(mod_complet)
 # 2. Selection du modèle par AIC:
 
 library(RcmdrMisc)
-```
-
-```
-## Warning: le package 'RcmdrMisc' a été compilé avec la version R 4.1.3
-```
-
-```
-## Le chargement a nécessité le package : sandwich
-```
-
-```
-## Warning: le package 'sandwich' a été compilé avec la version R 4.1.3
-```
-
-```r
 stepwise(mod_complet,direction="forward/backward",criterion="AIC",trace=FALSE)
 ```
 

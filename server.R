@@ -617,7 +617,6 @@ output$compAir <- renderDygraph({
     wpgt = input$wpgt
     pres = input$pres
     tavg = input$tavg
->>>>>>> lou
   
     
     if (prcp == T){ # si l'utilisateur a selectionne precipitation
