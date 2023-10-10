@@ -217,7 +217,7 @@ shinyServer(function(input, output) {
           qualair="Degrade"}
         if (x==4){
           qualair="Mauvais"}
-        if (x==4){
+        if (x==5){
           qualair="Tresmauvais"}
         return (qualair)}
 
