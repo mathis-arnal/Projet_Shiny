@@ -218,8 +218,13 @@ library(Factoshiny)
 
 ```
 
-![](images/graphVar.png){width="322"}![](images/graphInd.png){width="310"}
-![](images/graphInd(1).png){width="526"}
+
+
+![](images/graphVar.png)
+![](images/graphgrpInd.png)
+
+![](images/graphInd.png)
+
 
 La première dimension permet de bien séparer les individus, qui sont les
 jours selon un axe horizontal.

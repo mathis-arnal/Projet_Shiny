@@ -253,6 +253,7 @@ varibles et aux individus.
 ```r
 # Selection des colonnes qui nous interesse i.e les variables explicatives et la variable réponse
 library(Factoshiny)
+<<<<<<< HEAD
 ```
 
 ```
@@ -292,6 +293,25 @@ température qui participent à la création de l'axe 1. Alors les jours
 sont bien séparés selon leur température (été/hiver), mais ne semblent
 pas nous indiquer particulièrement sur la qualité de l'air.
 
+=======
+
+# Factoshiny(dt_qualite_air[, c(22:25,28:30,32,34:62)])
+```
+
+![](images/graphVar.png)
+![](images/graphgrpInd.png)
+
+![](images/graphInd.png)
+
+La première dimension permet de bien séparer les individus, qui sont les
+jours selon un axe horizontal.
+
+En comparant avec le graphique des variables, ce sont les variables de
+température qui participent à la création de l'axe 1. Alors les jours
+sont bien séparés selon leur température (été/hiver), mais ne semblent
+pas nous indiquer particulièrement sur la qualité de l'air.
+
+>>>>>>> lou
 En effet, on voit sur le graphique des individus colorés par groupe de
 qualité de l'air que le groupe 1-2 se répartit le long des deux
 premières dimensions de manière assez homogène. Les individus des
@@ -334,12 +354,18 @@ summary(mod_complet)
 ## glm(formula = qualite_air_groupe ~ ., family = "binomial", data = datamod)
 ## 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> lou
 ## Deviance Residuals: 
 ##      Min        1Q    Median        3Q       Max  
 ## -2.18450  -0.54726  -0.21237  -0.03812   3.08912  
 ## 
+<<<<<<< HEAD
 =======
 >>>>>>> c91d2b68ff0e79c35257866ebd0427c92e33e8fc
+=======
+>>>>>>> lou
 ## Coefficients:
 ##               Estimate Std. Error z value Pr(>|z|)    
 ## (Intercept)  5.9992979 20.7217305   0.290 0.772186    
@@ -381,11 +407,15 @@ summary(mod_complet)
 ## vent_y_lag3  0.3278160  0.2185672   1.500 0.133656    
 ## ---
 <<<<<<< HEAD
+<<<<<<< HEAD
 ## Signif. codes:  
 ## 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 =======
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 >>>>>>> c91d2b68ff0e79c35257866ebd0427c92e33e8fc
+=======
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+>>>>>>> lou
 ## 
 ## (Dispersion parameter for binomial family taken to be 1)
 ## 
@@ -400,6 +430,7 @@ summary(mod_complet)
 # 2. Selection du modèle par AIC:
 
 library(RcmdrMisc)
+<<<<<<< HEAD
 ```
 
 ```
@@ -422,10 +453,32 @@ library(RcmdrMisc)
 
 ```r
 stepwise(mod_complet,direction="forward/backward",criterion="AIC",trace=FALSE)
+=======
+stepwise(mod_complet,direction="forward/backward",criterion="AIC",trace=FALSE)
 ```
 
 ```
 ## 
+## Direction:  forward/backward
+## Criterion:  AIC
+```
+
+```
+## Error in is.data.frame(data): object 'datamod' not found
+```
+
+```r
+modfinal<- glm(formula = qualite_air_groupe ~ vent_x_lag2 + Vent_y_nord + 
+     wspd + vent_y_lag2 + tmax + tavg + vent_x_lag1 + vent_y_lag1 + 
+     prcp + tmin_lag3 + vent_y_lag3, family = "binomial", data = datamod)
+
+summary(modfinal)
+>>>>>>> lou
+```
+
+```
+## 
+<<<<<<< HEAD
 ## Direction:  forward/backward
 ## Criterion:  AIC
 ```
@@ -520,6 +573,72 @@ retrouve que :
 -   La pression atmosphérique et les bourasques de vent ne sont jamais
     associées à la probabilité de bonne ou mauvaise qualité de l'air.
 
+=======
+## Call:
+## glm(formula = qualite_air_groupe ~ vent_x_lag2 + Vent_y_nord + 
+##     wspd + vent_y_lag2 + tmax + tavg + vent_x_lag1 + vent_y_lag1 + 
+##     prcp + tmin_lag3 + vent_y_lag3, family = "binomial", data = datamod)
+## 
+## Deviance Residuals: 
+##      Min        1Q    Median        3Q       Max  
+## -2.08205  -0.55735  -0.24405  -0.05258   3.04723  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(>|z|)    
+## (Intercept) -0.93953    0.47521  -1.977 0.048035 *  
+## vent_x_lag2  0.44533    0.20911   2.130 0.033199 *  
+## Vent_y_nord  0.76183    0.19995   3.810 0.000139 ***
+## wspd        -0.13103    0.03033  -4.320 1.56e-05 ***
+## vent_y_lag2  0.59079    0.22447   2.632 0.008492 ** 
+## tmax         0.21846    0.07084   3.084 0.002044 ** 
+## tavg        -0.17360    0.08675  -2.001 0.045377 *  
+## vent_x_lag1  0.63055    0.21535   2.928 0.003412 ** 
+## vent_y_lag1  0.48221    0.21940   2.198 0.027957 *  
+## prcp        -0.13536    0.07333  -1.846 0.064907 .  
+## tmin_lag3   -0.06121    0.03248  -1.885 0.059451 .  
+## vent_y_lag3  0.33782    0.19612   1.722 0.084985 .  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 775.14  on 710  degrees of freedom
+## Residual deviance: 515.06  on 699  degrees of freedom
+## AIC: 539.06
+## 
+## Number of Fisher Scoring iterations: 6
+```
+
+Avec le critère d'AIC, on trouve un modèle à 11 paramètres, dont les
+effets sont tous significatifs au seuil de 0.10, et avec 8 paramètres
+dont les effets sont significatifs au seuil de 0.05.
+
+Regardons en détail les effets de ces variables. D'après le résumé, on
+retrouve que :
+
+-   (\*\*\*) Les deux paramètres qui semblent expliquer au mieux la
+    qualité de l'air sont la vitesse du vent et la direction du vent en
+    y, c'est-à-dire vers le nord. Une augmentation de la vitesse du vent
+    en y, donc un vent du nord, est associée à une diminution de la
+    probabilité d'une bonne qualité de l'air. Pour la vitesse du vent,
+    une augmentation de cette dernière est associée à une diminution de
+    la probabilité d'une bonne qualité de l'air.
+
+-   (\*\*) Les autres variables qui ont des effets sont significatifs
+    concernent à la fois les données du jour (tmax), les données de la
+    veille (vent_x_lag_1), et les données de l'avant veille
+    (vent_x_lag_2). L'interprétation des paramètres par paramètres est
+    analogue au paragraphe ci dessus.
+
+-   (\* et .) En regardant les niveaux de significativité plus grands et
+    si on accepte un niveau de significativité de 0.10, on retrouve des
+    variables de 3 jours avant parmis les variables avec un effet
+    significatif (tmin_lag2, vent_y_lag3)
+
+-   La pression atmosphérique et les bourasques de vent ne sont jamais
+    associées à la probabilité de bonne ou mauvaise qualité de l'air.
+
+>>>>>>> lou
 -   En résumé, les variables participant le mieux à expliquer la qualité
     de l'air sont les variables qualifiant el vent du jour, de la
     veille, et meme des jours précédents. On aura globalement un vent
