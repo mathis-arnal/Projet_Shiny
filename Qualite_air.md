@@ -223,7 +223,15 @@ library(Factoshiny)
 ```
 
 ```
-## Error in library(Factoshiny): aucun package nommé 'Factoshiny' n'est trouvé
+## Warning: le package 'Factoshiny' a été compilé avec la version R 4.3.1
+```
+
+```
+## Le chargement a nécessité le package : FactoInvestigate
+```
+
+```
+## Warning: le package 'FactoInvestigate' a été compilé avec la version R 4.3.1
 ```
 
 ```r
@@ -337,6 +345,13 @@ summary(mod_complet)
 # 2. Selection du modèle par AIC:
 
 library(RcmdrMisc)
+```
+
+```
+## Le chargement a nécessité le package : sandwich
+```
+
+```r
 stepwise(mod_complet,direction="forward/backward",criterion="AIC",trace=FALSE)
 ```
 
