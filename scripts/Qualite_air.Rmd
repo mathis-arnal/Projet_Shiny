@@ -10,7 +10,7 @@ editor_options:
     wrap: 72
 ---
 
-# Analyse de la qualité de l'air à rennes.
+# Analyse de la qualité de l'air Rennes.
 
 ```{r}
 # Chargement des packages utilisé dans la suite du script
@@ -64,7 +64,7 @@ réglementés](https://www.atmo-france.org/article/air-exterieur "Air extérieur
 
 -   *Le dioxyde de soufre (SO~2~)."* - Site Atmo-france.org
 
-![](images/tableau.JPG){width="539"}
+![](images/table1.png)
 
 [Table 1:]{.underline} tableau des seuil de calcul des indices ATMO pour
 les 5 polluants indicateurs de la pollution - source: Site
@@ -77,13 +77,13 @@ météorologiques permettent d'expliquer l'indice ATMO.
 ## b) Importation des données
 
 ```{r}
-
-df <- read.csv("C:/Users/renax/Desktop/ACO/S9/Programmation_R/Projet_meteo/Projet_Shiny/quality_index_rennes.csv", header=TRUE)
+path='../data/quality_index_rennes.csv'
+df <- read.csv( path, header=TRUE)
 
 set.seed(45L)
 dt_qualite_air <- data.table(df) # transformation en datatable
 
-summary(dt_qualite_air[,23:31]) # résumé pour les données meteo, pour verifier les classes des colonnes
+# summary(dt_qualite_air[,23:31]) # résumé pour les données meteo, pour verifier les classes des colonnes
 ```
 
 La variable à expliquer est la colonne code_qual'. Il s'agit d'une
@@ -174,7 +174,35 @@ moyenne est instrinsèquement liée à la température minimale et la
 température maximale. Ainsi, par principe de parcimonie nous ne gardons
 que la température moyenne sur les 3 variables de température.
 
-## d) Visualisation des données en anayse factorielle
+Nous créons en plus, des données de lag qui permettent de prendre en
+compte les 3 jours précédents le jours à prévoir:
+
+```{r}
+datameteo<-dt_qualite_air[,c(22:25,28:30,34,35)]
+donnees_lagues1 <- datameteo %>%
+  mutate_all(~lag(.))
+colnames(donnees_lagues1) <- c("tavg_lag1","tmin_lag1","tmax_lag1","prcp_lag1", "wspd_lag1","wppgt_lag1", "pres_lag1", "vent_x_lag1","vent_y_lag1")             
+
+donnees_lagues2 <- donnees_lagues1 %>%
+  mutate_all(~lag(.))
+colnames(donnees_lagues2) <- c("tavg_lag2","tmin_lag2","tmax_lag2","prcp_lag2", "wspd_lag2","wppgt_lag2", "pres_lag2", "vent_x_lag2","vent_y_lag2")              
+
+
+donnees_lagues3 <- donnees_lagues2 %>%
+  mutate_all(~lag(.))
+colnames(donnees_lagues3) <- c("tavg_lag3","tmin_lag3","tmax_lag3","prcp_lag3", "wspd_lag3","wppgt_lag3", "pres_lag3", "vent_x_lag3","vent_y_lag3")             
+
+
+# on juxtapose ces dataframe au tableau initial:
+dt_qualite_air <- cbind(dt_qualite_air, donnees_lagues1)
+dt_qualite_air <- cbind(dt_qualite_air, donnees_lagues2)
+dt_qualite_air <- cbind(dt_qualite_air, donnees_lagues3)
+
+# on enlève les 3 premières lignes car elles contiennent des NA:
+dt_qualite_air <- dt_qualite_air[-c(1:3),]
+```
+
+## d) Visualisation des données en analyse factorielle
 
 Afin d'avoir une vue d'esmble des variables explicatives et de la
 Variable réponse, nous faisons une ACP sur variables explicatives. Nous
@@ -184,95 +212,126 @@ varibles et aux individus.
 
 ```{r}
 # Selection des colonnes qui nous interesse i.e les variables explicatives et la variable réponse
-res<- PCA(dt_qualite_air[, c(22,23,24,25,28,29,30,32,34,35)],scale.unit = TRUE, quali.sup = 8)
-# enlever wdir
+library(Factoshiny)
 
-# Afficher le graphique PCA
-plot(res, habillage = 8, label = "none")
+# Factoshiny(dt_qualite_air[, c(22:25,28:30,32,34:62)])
 
 ```
 
-On vois sur le graph des individus colorés par groupe de qualité de
-l'air que le groupe 1-2 se réparti le long des deux première dimension
-de manière assez homogène. Les individus des groupes 3-4 sont legèrement
-plus vers la gauche du graphique, et se répartisse de manière homogène
-le long de la deuxième dimension. On retouve cela avec le barycentre des
-groupes 1-2 et 3-4 qui sont environ aux meme coordonées sur la deuxième
-dimension mais qui sont un peu différents sur la première
+![](images/graphVar.png){width="322"}![](images/graphInd.png){width="310"}
+![](images/graphInd(1).png){width="526"}
+
+La première dimension permet de bien séparer les individus, qui sont les
+jours selon un axe horizontal.
+
+En comparant avec le graphique des variables, ce sont les variables de
+température qui participent à la création de l'axe 1. Alors les jours
+sont bien séparés selon leur température (été/hiver), mais ne semblent
+pas nous indiquer particulièrement sur la qualité de l'air.
+
+En effet, on voit sur le graphique des individus colorés par groupe de
+qualité de l'air que le groupe 1-2 se répartit le long des deux
+premières dimensions de manière assez homogène. Les individus des
+groupes 3-4 sont légèrement plus vers le haut du graphique et les
+individus du groupe 1-2 plutôt vers le bas, mais les deux groupes se
+répartissent de manière homogène le long de la première dimension. On
+retrouve cela avec le barycentre des groupes 1-2 et 3-4 qui sont environ
+aux mêmes coordonnées sur la première dimension mais qui sont un peu
+séparés sur la deuxième.
 
 On peut donc supposer que les variables contribuant le plus à la
-première dimension pourraient nous donner des informations sur la
-qualité de l'air. Il est cependant difficile de séparer complètement les
-deux groupes d'individus.
+deuxième dimension pourraient nous donner des informations sur la
+qualité de l'air. Ces variables sont la précipitation en corrélation
+positive et le vent en corrélation négative avec l'axe de la deuxième
+dimension. Le groupe 1-2, de bonne qualité de l'air est ainsi davantage
+lié à des fortes précipitations et des directions de vent particulières,
+et inversement pour le groupe 3-4, associé à une moins bonne qualité de
+l'air.
+
+Il est cependant difficile de séparer complètement les deux groupes
+d'individus.
 
 ## e) Création des modèles
 
 Nous faisons dans un premier temps un modèle logistique complet avec
 l'ensemble des variables explicatives, et nous cherchons un modèle final
-par le biais d'une selection de modèle par élimination descendante avec
-un critère de test de rapport de vraissemblance (Likelihood Ratio Test).
-
-ichez les résultats de l'ANOVA
-
-print(resultat_anova)
+par grace au critère d'AIC.
 
 ```{r}
-# 1. Ajustez le modèle complet
-mod_complet <- glm(qualite_air_groupe ~ tavg + prcp + wspd + wpgt + pres + Vent_x_est + Vent_y_nord, data = dt_qualite_air, family = "binomial")
+datamod=dt_qualite_air[, c(22:25,28:30,32,34:62)]
+# 1. Ajustement du modèle complet
+mod_complet <- glm(qualite_air_groupe ~ ., data = datamod, family = "binomial")
+summary(mod_complet)
 
-# 2. Ajustez le modèle 2 (sans la variable 'wpgt')
-mod_2 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + pres + Vent_x_est + Vent_y_nord, data = dt_qualite_air, family = "binomial")
 
-# 3. Comparez les deux modèles en utilisant la fonction anova()
-anova(mod_complet, mod_2, test="F")
+# 2. Selection du modèle par AIC:
 
-summary(mod_2)
+library(RcmdrMisc)
+stepwise(mod_complet,direction="forward/backward",criterion="AIC",trace=FALSE)
 
-## On recommence avec un autre modèle où on enlève pres
-mod_3 <- glm(qualite_air_groupe ~ tavg + prcp + wspd + Vent_x_est + Vent_y_nord, data = dt_qualite_air, family = "binomial")
+modfinal<- glm(formula = qualite_air_groupe ~ vent_x_lag2 + Vent_y_nord + 
+     wspd + vent_y_lag2 + tmax + tavg + vent_x_lag1 + vent_y_lag1 + 
+     prcp + tmin_lag3 + vent_y_lag3, family = "binomial", data = datamod)
 
-anova(mod_2, mod_3, test="F")
+summary(modfinal)
 
-# on garde le modèle 3
-summary(mod_3)
 ```
 
-Tous les paramètres de notre modèles sont significatifs.
+Avec le critère d'AIC, on trouve un modèle à 11 paramètres, dont les
+effets sont tous significatifs au seuil de 0.10, et avec 8 paramètres
+dont les effets sont significatifs au seuil de 0.05.
 
-Regardons en detail les effets de ces variables.D'après le résumé, on
-retrouve que:
+Regardons en détail les effets de ces variables. D'après le résumé, on
+retrouve que :
 
--   La pression atmosphérique et les bourasques de vent ne sont pas
-    associées à la probabilité de bonne ou mauvaise qualité de l'air
--   L'augmentation de la température moyenne (tavg) est associée à
-    l'augmentation de la probabilité de mauvaise qualité de l'air par
-    rapport à la bonne qualité de l'air
--   A l'inverse, une augmentation des précipitation et de la vitesse du
-    vent est associée à une augmentation de la probabilité de bonne
-    qualité de l'air
--   Pour les valeurs de vents, on reprend les transformations
-    trigonométriques qui nous avaient permis de créer ces variables, et
-    on retrouve qu'une augmentation de vent_x et de vent_y, donc un vent
-    vers l'est et vers le nord est associé à une augmentation de la
-    probabilité de bonne qualité de l'air. Aussi, puisque le coefficient
-    est deux fois superieur pour vent_y, on peut dire que la direction
-    du vent associé à une augmentation de la probabilité de bonne
-    qualité de l'air est NNE.
+-   (\*\*\*) Les deux paramètres qui semblent expliquer au mieux la
+    qualité de l'air sont la vitesse du vent et la direction du vent en
+    y, c'est-à-dire vers le nord. Une augmentation de la vitesse du vent
+    en y, donc un vent du nord, est associée à une diminution de la
+    probabilité d'une bonne qualité de l'air. Pour la vitesse du vent,
+    une augmentation de cette dernière est associée à une diminution de
+    la probabilité d'une bonne qualité de l'air.
+
+-   (\*\*) Les autres variables qui ont des effets sont significatifs
+    concernent à la fois les données du jour (tmax), les données de la
+    veille (vent_x_lag_1), et les données de l'avant veille
+    (vent_x_lag_2). L'interprétation des paramètres par paramètres est
+    analogue au paragraphe ci dessus.
+
+-   (\* et .) En regardant les niveaux de significativité plus grands et
+    si on accepte un niveau de significativité de 0.10, on retrouve des
+    variables de 3 jours avant parmis les variables avec un effet
+    significatif (tmin_lag2, vent_y_lag3)
+
+-   La pression atmosphérique et les bourasques de vent ne sont jamais
+    associées à la probabilité de bonne ou mauvaise qualité de l'air.
+
+-   En résumé, les variables participant le mieux à expliquer la qualité
+    de l'air sont les variables qualifiant el vent du jour, de la
+    veille, et meme des jours précédents. On aura globalement un vent
+    vers le Nord et l'Est qui sera associé à une probabilité de bonne
+    qualité de l'air. En plus du vent, la précipitation du jour et la
+    tempétature du jour expliquent la qualité de l'air dans notre
+    modèle: de fortes précipitations et des petites températures
+    maximales sont associées à une bonne qualité de l'air.
 
 ## Conclusion
 
 Notre modèle suggère que la pluie, la température et le vent (la
 direction et la vitesse) ont une influence sur l'indice ATMO, qui rend
-compte de la qualité de l'air. La météo semble ainsi pouvoir expliquer
-du moins en partie la qualité de l'air. Les bourasques de vents et la
-pression atmosphérique n'ont pas d'influence sur l'indice ATMO.
+compte de la qualité de l'air. Il nous a semblé interessant de prendre
+en compte les jours précédent la mesure de la qualité de l'air, et
+certaines variables de la veille avant veille et meme avant ont des
+effets significatifs. La météo semble ainsi pouvoir expliquer du moins
+en partie la qualité de l'air. Les bourasques de vents et la pression
+atmosphérique n'ont pas d'influence sur l'indice ATMO.
 
 Les informations que nous avons mises en évidence sont des premiers
 resultats et de nombreux facteurs, d'avantage liés à la cause des
 emission des gaz polluants pourraient permettre de mieux comprendre
 l'indice de ATMO.
 
-La meteo nous permet ainsi d'expliquer en partie la qualité de l'air, et
+La météo nous permet ainsi d'expliquer en partie la qualité de l'air, et
 ainsi, il semblerait être possible de prévoir la qualité de l'air, avec
 des informations sur les emissions de polluants croisées avec des
 données météo prévues par les institutions spécialisées.
