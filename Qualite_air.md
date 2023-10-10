@@ -224,8 +224,10 @@ library(Factoshiny)
 # Factoshiny(dt_qualite_air[, c(22:25,28:30,32,34:62)])
 ```
 
-![](images/graphVar.png){width="322"}![](images/graphInd.png){width="310"}
-![](images/graphInd(1).png){width="526"}
+![](images/graphVar.png)
+![](images/graphgrpInd.png)
+
+![](images/graphInd.png)
 
 La première dimension permet de bien séparer les individus, qui sont les
 jours selon un axe horizontal.
@@ -275,6 +277,10 @@ summary(mod_complet)
 ## 
 ## Call:
 ## glm(formula = qualite_air_groupe ~ ., family = "binomial", data = datamod)
+## 
+## Deviance Residuals: 
+##      Min        1Q    Median        3Q       Max  
+## -2.18450  -0.54726  -0.21237  -0.03812   3.08912  
 ## 
 ## Coefficients:
 ##               Estimate Std. Error z value Pr(>|z|)    
@@ -341,7 +347,7 @@ stepwise(mod_complet,direction="forward/backward",criterion="AIC",trace=FALSE)
 ```
 
 ```
-## Error in eval(mf, parent.frame()): object 'datamod' not found
+## Error in is.data.frame(data): object 'datamod' not found
 ```
 
 ```r
@@ -358,6 +364,10 @@ summary(modfinal)
 ## glm(formula = qualite_air_groupe ~ vent_x_lag2 + Vent_y_nord + 
 ##     wspd + vent_y_lag2 + tmax + tavg + vent_x_lag1 + vent_y_lag1 + 
 ##     prcp + tmin_lag3 + vent_y_lag3, family = "binomial", data = datamod)
+## 
+## Deviance Residuals: 
+##      Min        1Q    Median        3Q       Max  
+## -2.08205  -0.55735  -0.24405  -0.05258   3.04723  
 ## 
 ## Coefficients:
 ##             Estimate Std. Error z value Pr(>|z|)    
