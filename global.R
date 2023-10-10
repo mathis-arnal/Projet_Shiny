@@ -14,8 +14,10 @@ library(tufte)
 library(fontawesome)
 library(ggmap)
 library(xts)
-library(caret)
 library(dplyr)
+library(car)
+library(FactoMineR)
+library(caret)
 
 ## ouverture de nos jeux de données 
 
@@ -24,5 +26,7 @@ sapply(rmdfiles, knit, quiet = T)
 
 meteostat_data <- fread("data/meteostat_data.csv", header=TRUE)
 meteostat_data$time <- as.Date(meteostat_data$time, format="YYYY-MM-DD")
+
 air_quality <- fread("data/quality_index_rennes.csv")
+
 

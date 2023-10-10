@@ -19,82 +19,66 @@ mytheme <- create_theme(
 # Define UI 
 shinyUI(
   dashboardPage(skin="blue",
-                dashboardHeader(title = "Météo Bretagne", titleWidth = 250
-                ),
-                dashboardSidebar(width = 250,
-                                 sidebarMenu(id  = "menu",
-                                             menuItem("Notre projet", tabName = "Projet"),
-                                             menuItem("Carte interactive", tabName = "Carte", icon = icon("map")), 
-                                             menuItem("Données météo", tabName = "Météo", icon = icon("cloud-rain")),
-                                             menuItem("Qualité de l'air", tabName = "Rapport", icon = icon("searchengin")),
-                                             
-                                             conditionalPanel('input.menu == "Météo"',
-                                                              tags$style("p {font-size: 18px;font-weight: bold}"),
-                                                              div(style = "position:relative; left:calc(25%);", br(), p("Fonctionnalités")),
-                                                              radioButtons("ville", "Choisissez la ville de votre choix :",
-                                                                           choiceNames = list(
-                                                                             "Rennes",
-                                                                             "Saint-Brieuc",
-                                                                             "Vannes",
-                                                                             "Brest",
-                                                                             "Quimper"
-                                                                           ),
-                                                                           choiceValues = list(
-                                                                             "text", "text", "text", "text", "text"
-                                                                           )),
-                                                              dateRangeInput(inputId = "idDateRange", label = "Sélectionner la période qui vous intéresse : ",
-                                                                             start = "2020-01-01", end = "2023-09-22", format = "yyyy-mm-dd",
-                                                                             language = "fr", separator = " to "),
-                                                              checkboxInput(inputId = "idCheckair", label = "Indice de qualité de l'air"),
-                                                              ##Bouton poour lancer l'analyse 
-                                                              div(style = "position:relative; left:calc(15%);", actionButton( "go", "Afficher les graphiques")),
-                                                              selectInput("dataset", "Choisissez le jeu de données que vous souhaitez télécharger :",
-                                                                          choices = c("Données météo", "Données indice qualité de l'air")),
-                                                              
-                                                              # Bouton
-                                                              div(style = "position:relative; left:calc(25%);",downloadButton("downloadData","Télécharger"))))
-                                 
-                ),
-                dashboardBody(
-                  
-                  chooseSliderSkin("Flat"),
-                  
-                  use_theme(mytheme),
-                  
-                  tags$head(tags$style(HTML('
-      .main-header .logo {
-        font-family: system-ui;
-        font-weight: bold;
-        font-size: 24px;
-      }
-    '),
-                                       tags$head(tags$style(type='text/css', 
-                                                            ".slider-animate-button { font-size: 20pt !important; }")))),
-                  
-                  # navbarPage
-                  navbarPage("Des bottes et un ciré ?", 
-                             
-                             # premier onglet présentation
+    dashboardHeader(title = "Météo Bretagne", titleWidth = 250
+                    ),
+    dashboardSidebar(width = 250,
+                     sidebarMenu(id  = "menu",
+                     menuItem("Notre projet", tabName = "Projet"),
+                     menuItem("Carte interactive", tabName = "Carte", icon = icon("map")), 
+                     menuItem("Données météo", tabName = "Météo", icon = icon("cloud-rain")),
+                     menuItem("Qualité de l'air", tabName = "Rapport", icon = icon("searchengin")),
+                     
+                     conditionalPanel('input.menu == "Météo"',
+                     tags$style("p {font-size: 18px;font-weight: bold}"),
+                     div(style = "position:relative; left:calc(25%);", br(), p("Fonctionnalités")),
+                     radioButtons("ville", "Choisissez la ville de votre choix :",
+                                  choiceNames = list(
+                                    "Rennes",
+                                    "Saint-Brieuc",
+                                    "Vannes",
+                                    "Brest",
+                                    "Quimper"
+                                  ),
+                                  choiceValues = list(
+                                    "text", "text", "text", "text", "text"
+                                  )),
+                       dateRangeInput(inputId = "idDateRange", label = "Sélectionner la période qui vous intéresse : ",
+                                      start = "2020-01-01", end = "2023-09-22", format = "yyyy-mm-dd",
+                                      language = "fr", separator = " to "),
+                       checkboxInput(inputId = "idCheckair", label = "Indice de qualité de l'air"),
+                      ##Bouton poour lancer l'analyse 
+                       div(style = "position:relative; left:calc(15%);", actionButton( "go", "Afficher les graphiques")),
+                       selectInput("dataset", "Choisissez le jeu de données que vous souhaitez télécharger :",
+                                 choices = c("Données météo", "Données indice qualité de l'air")),
+                     
+                        # Bouton
+                       div(style = "position:relative; left:calc(25%);",downloadButton("downloadData","Télécharger"))))
+                     
+                     ),
+    dashboardBody(chooseSliderSkin("Flat"),
+      
+      use_theme(mytheme),
+      tags$head(tags$style(type='text/css',".slider-animate-button { font-size: 20pt !important; }")),
+      
+      # navbarPage
+      navbarPage("Des bottes et un ciré ?", 
+                 # premier onglet présentation
                              tabItems(
                                # First tab content
                                tabItem("Projet", 
                                        fluidRow(
                                          box(
                                            title = "Notre objectif", width = 8, solidHeader = TRUE,
-                                           "Le temps breton a un réputation connu, plus ou moins apprécié, il n'en reste pas 
-                              moins un sujet d'étude intéressant. Cette application permet de visualiser l'évolution des
+                                           "Le temps breton a un réputation connu, plus ou moins apprécié, il n'en reste pasmoins un sujet d'étude intéressant. 
+                                           Cette application permet de visualiser l'évolution des
                               différents évènements météorologiques entre 2021 et 2023. De plus, une étude statistique 
                               concernant l'indice de qualité* de l'air a permis de mettre en lumière les paramètres permettant
                               d'expliquer au mieux cet indice.",
-                                           br(), br(),
+                               br(), br(),
                                            "Renée, Mathis et Lou", 
                                            br(), br(), br(),
                                            "*Pour plus d'information sur l'indice de qualité de l'air vous pouvez vous référez au lien suivant :",
-                                           uiOutput("lien")
-                                           
-                                           
-                                           
-                                         )
+                                           uiOutput("lien"))
                                        )
                                ),
                                # deuxième onglet carte
@@ -174,5 +158,5 @@ shinyUI(
                                  ))
                              )
                   )
-                )))
+  )))
 
